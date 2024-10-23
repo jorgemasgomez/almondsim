@@ -1,5 +1,8 @@
 # Update parents
 
-# Replace all parents with new parents from ECT4 stage
+# Replace parents with the lowest ebv, with the new ones cohort
 
-Parents = selectInd(ACT3, nInd = nParents, use = "pheno")
+
+poplist=list(Parents, ECT1)
+pop_parents=mergePops(poplist)
+Parents = selectInd(pop_parents, nInd = nParents, use = "pheno")
