@@ -1,17 +1,16 @@
 # Run pedigree BLUP model internal AlphaSimR solver
 
-# Pedigree BLUP is used to predict breeding values of Seedlings in
-# order to skip HPT stages
+# Pedigree BLUP is used to predict breeding values of HPT4 
 
-# Prepare prediction dataset for seedlings
+# Prepare prediction dataset for HPT4
 pedPop_tmp = rbind(pedPop,
-                   data.frame(Ind   = c(Seedlings@id),
-                              Sire  = c(Seedlings@father),
-                              Dam   = c(Seedlings@mother),
+                   data.frame(Ind   = c(HPT4@id),
+                              Sire  = c(HPT4@father),
+                              Dam   = c(HPT4@mother),
                               Year  = year,
-                              Stage = rep("Seedlings",Seedlings@nInd),
-                              Pheno = NA,
-                              GV = c(Seedlings@gv)))
+                              Stage = rep("HPT4",HPT4@nInd),
+                              Pheno = c(HPT4@pheno),
+                              GV = c(HPT4@gv)))
 
 # Create factors
 pedPop_tmp$Ind  = as.factor(pedPop_tmp$Ind)
@@ -38,7 +37,7 @@ if (asreml.avail) {
                      # residual = ~ dsum(~id(units) | Year),
                      residual = ~ units,
                      na.action = na.method(y='include'),
-                     data = pedPop_tmp)
+                     data = pedPop_tmp) #TEST JORGE
   # Loop to ensure model converges
   while (pedModel$converge != TRUE) {
     pedModel <- update.asreml(pedModel)
@@ -59,7 +58,7 @@ if (asreml.avail) {
   y = matrix(pedPop_tmp$Pheno); dim(y)
   X = model.matrix(Pheno ~ 1 + Year, data = pedPop_tmp); dim(X)
   Z = model.matrix(Pheno ~ Ind - 1, data = pedPop_tmp); dim(Z)
-  ped2 = with(ped, pedPop(label = id, sire = sire, dam = dam))
+  ped2 <- data.frame(label = ped$id, sire = ped$sire, dam = ped$dam)
   A = getA(ped2)
   A = A[rownames(A) %in% pedPop_tmp$Ind,rownames(A) %in% pedPop_tmp$Ind]; dim(A)
   fit = solveUVM(y = y, X = X, Z = Z, K = as.matrix(A))

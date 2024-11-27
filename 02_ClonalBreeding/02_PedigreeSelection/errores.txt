@@ -1,0 +1,9 @@
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: objeto 'nFuture' no encontrado 
+
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: no se puede abrir la conexión 
+
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: no se puede abrir la conexión 
+

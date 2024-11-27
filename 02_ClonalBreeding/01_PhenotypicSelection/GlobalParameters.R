@@ -1,7 +1,7 @@
 # Global Parameters
 
 # ---- Number of simulation replications and breeding cycles ----
-nReps   = 100      # Number of simulation replicates
+nReps   = 10     # Number of simulation replicates
 nBurnin = 40      # Number of years in burnin phase
 nFuture = 40      # Number of years in future phase
 startRecords = 35 # Year when training and pedigree record collecting begins
@@ -22,7 +22,7 @@ initVarGE = 150000  # Genotype-by-year interaction variance
 VarE      = 2800000 # Single variance
 
 # ---- Breeding program details ----
-nParents   = 20   # Number of parents (and founders)
+nParents   = 30   # Number of parents (and founders)
 nCrosses   = 20  # Number of crosses
 nProgeny   = 50   # Number of progenies per cross
 nClonesACT = 50  # Number of individuals selected at ACT stage

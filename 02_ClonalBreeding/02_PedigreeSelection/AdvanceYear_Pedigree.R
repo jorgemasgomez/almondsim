@@ -3,45 +3,80 @@
 # Advance breeding program by 1 year
 # Works backwards through pipeline to avoid copying data
 
-# Stage 13
-ECT6 = setPheno(ECT5, varE = VarE, reps = repECT, p = P[year])
+
 
 # Stage 12
-ECT5 = ECT4
+ECT3 = setPheno(ECT2, varE = VarE, reps = repECT, p = P[year],h2 = c(0.5))
 
 # Stage 11
-ECT4 = ECT3
-
-# Stage 10
-ECT3 = ECT2
-
-# Stage 9
 ECT2 = ECT1
 
+# Stage 10
+#TEST_JORGE
+ACT3@ebv <- as.matrix(EBV[(length(EBV) - HPT4@nInd - ACT3@nInd + 1):(length(EBV) - HPT4@nInd)])
+output$accSel[year] = cor(gv(ACT3), ebv(ACT3))
+ECT1 = selectInd(ACT3, nInd = nClonesECT, use = "ebv")
+
+
+# ECT1 = selectInd(ACT3, nInd = nClonesECT, use = "pheno")
+
+
+# Stage 9
+ACT3 = setPheno(ACT2, varE = VarE, reps = repACT, p = P[year], h2 = c(0.4))
+
 # Stage 8
-ECT1 = selectInd(ACT5, nInd = nClonesECT, use = "pheno")
-
-# Stage 7
-ACT5 = setPheno(ACT4, varE = VarE, reps = repACT, p = P[year])
-
-# Stage 6
-ACT4 = ACT3
-
-# Stage 5
-ACT3 = ACT2
-
-# Stage 4
 ACT2 = ACT1
 
-# Stage 3
+# Stage 7
 # Use pedigree estimated breeding values to select seedlings for further evaluation
-Seedlings@ebv       = as.matrix(tail(EBV, Seedlings@nInd))
-output$accSel[year] = cor(gv(Seedlings), ebv(Seedlings))
-ACT1 = selectInd(Seedlings, nInd = nClonesACT, use = "ebv")
+HPT4@ebv= as.matrix(tail(EBV, HPT4@nInd))
+
+output$accSel[year] = cor(gv(HPT4), ebv(HPT4))
+
+ACT1 = selectInd(HPT4, nInd = nClonesACT, use = "ebv")
+
+
+# Stage 6
+HPT4 = setPheno(HPT3, varE = VarE, reps = repHPT, p = P[year], h2 = c(0.2))
+
+# Stage 5
+HPT3 = HPT2
+
+# Stage 4
+HPT2 = HPT1
+
+# Stage 3
+HPT1 = Seedlings
 
 # Stage 2
-Seedlings = setPheno(F1, varE = VarE, reps = repHPT, p = P[year])
+Seedlings = F1
 
 # Stage 1
 # Crossing block
 F1 = randCross(Parents, nCrosses = nCrosses, nProgeny = nProgeny)
+Parents = setPheno(Parents, varE = VarE, reps = repECT, p = P[year], h2 = c(0.5))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
