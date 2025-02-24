@@ -41,4 +41,6 @@ Seedlings = F1
 
 # Stage 1
 # Crossing block
-F1 = randCross(Parents, nCrosses = nCrosses, nProgeny = nProgeny)
+# F1 = randCross(Parents, nCrosses = nCrosses, nProgeny = nProgeny)
+prms<- list(SIPos=locuscompt_position_vector, random_failure=FALSE)
+F1 = randCrossGamSI(prms = prms,pop = Parents, nCrosses = nCrosses, nProgeny = nProgeny)

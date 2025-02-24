@@ -1,0 +1,15 @@
+Error en el esquema: 01_PhenotypicSelection 
+ Mensaje de error: objeto 'keep_objects' no encontrado 
+
+Error en el esquema: 01_PhenotypicSelection 
+ Mensaje de error: el argumento no fue usado (pop2_parents) 
+
+Error en el esquema: 10_PhenotypicSelection_sf_introgress_25 
+ Mensaje de error: el argumento no fue usado (pop2_parents) 
+
+Error en el esquema: 10_PhenotypicSelection_sf_introgress_25 
+ Mensaje de error: objeto 'nclonesACT' no encontrado 
+
+Error en el esquema: 10_PhenotypicSelection_sf_introgress_25 
+ Mensaje de error: selection trait has missing values, phenotype may need to be set 
+

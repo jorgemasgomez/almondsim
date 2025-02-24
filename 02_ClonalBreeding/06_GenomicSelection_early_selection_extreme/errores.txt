@@ -1,0 +1,24 @@
+Error en el esquema: 06_GenomicSelection_early_selection_extreme 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 06_GenomicSelection_early_selection_extreme 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 06_GenomicSelection_early_selection_extreme 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 06_GenomicSelection_early_selection_extreme 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 06_GenomicSelection_early_selection_extreme 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 06_GenomicSelection_early_selection_extreme 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 06_GenomicSelection_early_selection_extreme 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 06_GenomicSelection_early_selection_extreme 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+

@@ -14,7 +14,8 @@ nSnp    = 600     # Simulate SNP chip with 9000 markers
 genLen  = 1       # Genetic length
 PhyLen  = 1e+08   # Physical length
 mutRate = 2.5e-08 # Mutation rate
-
+nlocicompatibility=50
+locuscompt_position = "1_5000"
 # ---- Initial parents mean and variance ----
 initMeanG = 2500    # Phenotypic mean
 initVarG  = 150000  # Genetic variance

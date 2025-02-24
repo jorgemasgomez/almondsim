@@ -34,7 +34,7 @@ if (pipeline) {
 } else {
   # ---- Clean environment and load packages ----
   rm(list = ls())
-  
+  source(file = "compatible_crosses.R")
     # ---- Load global parameters ----
   source(file = "GlobalParameters.R")
   scenarioName = "GS"

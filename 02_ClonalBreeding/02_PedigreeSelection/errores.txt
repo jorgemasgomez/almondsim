@@ -7,3 +7,37 @@ Error en el esquema: 02_PedigreeSelection
 Error en el esquema: 02_PedigreeSelection 
  Mensaje de error: no se puede abrir la conexión 
 
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: Error   : 1 singularities in the Average Information matrix.
+          : To continue the analysis anyway, try running it again with the optional argument ai.sing = TRUE 
+
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: Error   : 1 singularities in the Average Information matrix.
+          : To continue the analysis anyway, try running it again
+          : with the optional argument ai.sing = TRUE 
+
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: Error   : 1 singularities in the Average Information matrix.
+          : To continue the analysis anyway, try running it again with the optional argument ai.sing = TRUE 
+
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: Error   : 1 singularities in the Average Information matrix.
+          : To continue the analysis anyway, try running it again with the optional argument ai.sing = TRUE 
+
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: Error   : 1 singularities in the Average Information matrix.
+          : To continue the analysis anyway, try running it again
+          : with the optional argument ai.sing = TRUE 
+
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: Error   : 1 singularities in the Average Information matrix.
+          : To continue the analysis anyway, try running it again with the optional argument ai.sing = TRUE 
+
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: License error: License server does not support this product (-18)
+ 
+
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: License error: License server does not support this product (-18)
+ 
+

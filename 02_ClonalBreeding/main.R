@@ -1,31 +1,32 @@
 #Execute all
 
-reps=20
+reps=100
 main_dir <- "C:/Users/Pheno/OneDrive - UNIVERSIDAD DE MURCIA/Escritorio/Almond_sim/almondsim/02_ClonalBreeding"
 # Cambiar a la carpeta del esquema
 setwd(main_dir)
+source(file = "compatible_crosses.R")
 pipeline<-TRUE
-###### Burn-in #####
 
-# if (dir.exists("burn_in_folder")) {
-#   unlink("burn_in_folder", recursive = TRUE)  # Eliminar la carpeta y su contenido
-# }
-# dir.create("burn_in_folder")
-# 
-# setwd(file.path(main_dir, "00_Burn_in"))
-# source(file = "00RUNME.R")
+
+# ###### Burn-in #####
+
+if (dir.exists("burn_in_folder")) {
+  unlink("burn_in_folder", recursive = TRUE)  # Eliminar la carpeta y su contenido
+}
+dir.create("burn_in_folder")
+
+setwd(file.path(main_dir, "00_Burn_in"))
+source(file = "00RUNME.R")
 
 
 
 
 ### Run scenarios #####
 setwd(file.path(main_dir))
-schemes <- c("01_PhenotypicSelection", "02_PedigreeSelection", "03_GenomicSelection",
-             "04_GenomicSelection_costeffective", "05_GenomicSelection_early_selection",
-             "06_GenomicSelection_early_selection_extreme")
 
-# schemes <- c("02_PedigreeSelection", "03_GenomicSelection")
-# schemes <- c("01_PhenotypicSelection","02_PedigreeSelection")
+schemes <- c("01_PhenotypicSelection","10_PhenotypicSelection_sf_introgress_25",
+"10_PhenotypicSelection_sf_introgress_100","03_GenomicSelection", "11_GenomicSelection_sf_introgress_25", "11_GenomicSelection_sf_introgress_100")
+
 
 #Removes previous results
 if (file.exists("results_all_schemes.txt")) {
@@ -51,12 +52,14 @@ for (REP in 1:reps){
     
     # Intenta ejecutar el bloque de código dentro del tryCatch
     tryCatch({
-      
+      print(scheme)
+      print(REP)
       main_dir <- "C:/Users/Pheno/OneDrive - UNIVERSIDAD DE MURCIA/Escritorio/Almond_sim/almondsim/02_ClonalBreeding"
       # Cambiar a la carpeta del esquema
       setwd(file.path(main_dir, scheme))
       
-      keep_objects <- c("scheme", "main_dir","schemes", "REP","reps","nBurnin","pipeline")
+      keep_objects <- c("scheme", "main_dir","schemes", "REP","reps","nBurnin","pipeline","randCrossGamSI",
+                        "self_compatible_allele", "selectind_selfcompatible", "randCrossGamSI_selfcomp_compulsory")
       
       # Eliminar todo menos los objetos especificados
       rm(list = setdiff(ls(), keep_objects))
@@ -237,5 +240,3 @@ p_accSel_box <- ggplot(data_last_year, aes(x = scenario, y = accSel, fill = scen
 jpeg("plots/accSel_boxplot.jpg", width = 2000, height = 1000, res = 300)
 print(p_accSel_box)
 dev.off()
-
-

@@ -10,6 +10,7 @@
 
 # install.packages(pkgs = "AlphaSimR")
 library(package = "AlphaSimR")
+
 # pipeline<-FALSE
 
 if (pipeline) {
@@ -37,6 +38,7 @@ if (pipeline) {
   
 } else {
   rm(list = ls())
+  source(file = "compatible_crosses.R")
   # ---- Load global parameters ----
   source(file = "GlobalParameters.R")
   scenarioName = "Pheno"
@@ -94,10 +96,12 @@ if (pipeline) {
   # ---- Analyze results ----
   source(file = "ANALYZERESULTS.R")
   
-  
-  
-  
-  
-  
-  
 }
+
+
+
+
+
+
+
+

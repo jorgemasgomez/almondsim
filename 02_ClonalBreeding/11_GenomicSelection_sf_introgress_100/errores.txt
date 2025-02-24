@@ -1,0 +1,27 @@
+Error en el esquema: 06_GenomicSelection_early_selection_extreme 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 06_GenomicSelection_early_selection_extreme 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 06_GenomicSelection_early_selection_extreme 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 11_GenomicSelection_sf_introgress_25 
+ Mensaje de error: subíndice fuera de  los límites 
+
+Error en el esquema: 11_GenomicSelection_sf_introgress_25 
+ Mensaje de error: subíndice fuera de  los límites 
+
+Error en el esquema: 11_GenomicSelection_sf_introgress_25 
+ Mensaje de error: subíndice fuera de  los límites 
+
+Error en el esquema: 11_GenomicSelection_sf_introgress_25 
+ Mensaje de error: subíndice fuera de  los límites 
+
+Error en el esquema: 11_GenomicSelection_sf_introgress_25 
+ Mensaje de error: subíndice fuera de  los límites 
+
+Error en el esquema: 11_GenomicSelection_sf_introgress_25 
+ Mensaje de error: subíndice fuera de  los límites 
+

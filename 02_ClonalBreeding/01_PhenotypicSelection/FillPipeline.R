@@ -9,7 +9,9 @@ P = runif(12)
 for(cohort in 1:12) {
   cat("  FillPipeline stage:",cohort,"of 16\n")
   # Stage 1 Crossing block
-  F1 = randCross(Parents, nCrosses = nCrosses, nProgeny = nProgeny)
+  # F1 = randCross(Parents, nCrosses = nCrosses, nProgeny = nProgeny)
+  prms<- list(SIPos=locuscompt_position_vector, random_failure=FALSE)
+  F1 = randCrossGamSI(prms = prms,pop = Parents, nCrosses = nCrosses, nProgeny = nProgeny)
   if(cohort < 12){
     # Stage 2 Germinate the seedlings in the nursery
     Seedlings = F1

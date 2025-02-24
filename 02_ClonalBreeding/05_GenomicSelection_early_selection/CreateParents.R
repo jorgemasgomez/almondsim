@@ -15,19 +15,34 @@
 #La posicion genetica hacerla funcion de la posici?n f?sica (recomb rate del chr  x posici?n fisica)
 
 
-#Import physical map
+# Inicializar listas vacías
+genMap <- list()
+haplotypes <- list()
+# Definir tasa de recombinación como una lista con 8 valores
+recombination_rate_test <- c(1.97036e-08, 1.51361e-08, 1.886e-08, 2.22347e-8,2.54212e-8,1.9829e-8,2.61388e-8,2.11591e-8)
 
-genMap_test <- scan("../Haplotypes/Chr_1_position.txt")
-recombination_rate_test<- 1.97e-08
-# Convert to genetic map
-genMap_test<- genMap_test*recombination_rate_test
-genMap=list(genMap_test)
+# Iterar sobre los cromosomas del 1 al 8
+for (i in 1:8) {
+  # Leer el archivo de posiciones
+  genMap_temp <- scan(paste0("../Haplotypes/Chr_", i, "_position.txt"))
+  
+  # Convertir a mapa genético utilizando la tasa de recombinación correspondiente
+  genMap_temp <- genMap_temp * recombination_rate_test[i]
+  
+  # Guardar en la lista
+  genMap[[i]] <- genMap_temp
+  
+  # Importar matriz de haplotipos
+  data <- scan(paste0("../Haplotypes/Chr_", i, "_gmatrix.txt"))
+  chr_temp <- matrix(data, ncol = 60, byrow = TRUE)
+  chr_temp <- t(chr_temp)
+  
+  # Guardar en la lista de haplotipos
+  haplotypes[[i]] <- chr_temp
+}
 
-#Import gmatrix for haplotypes
-data <- scan("../Haplotypes/Chr_1_gmatrix.txt")
-chr_test <- matrix(data, ncol = 40, byrow = TRUE)
-chr_test<-t(chr_test)
-haplotypes = list(chr_test)
+# Ahora genMap y haplotypes contienen los datos de los cromosomas 1 a 8
+
 
 founderPop = newMapPop(genMap=genMap, haplotypes=haplotypes)
 
@@ -51,6 +66,58 @@ SP$setTrackPed(TRUE)
 
 # Create founder parents
 Parents = newPop(founderPop)
+
+#SET SLOCI
+nmarkers_sloci <- ceiling(log2(nlocicompatibility))
+
+
+
+prefix <- sub("_.*", "", locuscompt_position)
+base_number <- as.numeric(sub(".*_(\\d+)$", "\\1", locuscompt_position))
+secuencia <- base_number + 1:nmarkers_sloci
+locuscompt_position_vector <- paste(prefix, secuencia, sep = "_")
+
+slocihaplos<-pullMarkerHaplo(Parents,markers = locuscompt_position_vector, haplo = "all")
+
+
+# Generate all possible binary combinations
+# For each number from 0 to 2^nmarkers_sloci - 1, convert to binary and take only the first nmarkers_sloci bits
+combinations <- sapply(0:(2^nmarkers_sloci - 1), function(x) {
+  as.numeric(intToBits(x))[1:nmarkers_sloci]
+})
+# Transpose the combinations and convert them into a data frame
+possible_haplotypes <- as.data.frame(t(combinations))
+colnames(possible_haplotypes) <- locuscompt_position_vector
+# Keep only the first nloci rows
+possible_haplotypes <- possible_haplotypes[1:nlocicompatibility, ]
+
+
+#RANDOM ASIGNATION
+
+# Extract unique IDs from the row names of slocihaplos
+rownames_split <- strsplit(rownames(slocihaplos), "_")  # Split row names by "_"
+ids <- sapply(rownames_split, `[`, 1)  # Extract the ID (the part before "_")
+unique_ids <- unique(ids)  # Get unique IDs
+
+# Create a copy of slocihaplos to populate with new haplotypes
+new_slocihaplos <- slocihaplos
+
+# Loop through each unique ID to assign haplotypes
+for (id in unique_ids) {
+  # Find rows corresponding to the current ID (e.g., "1_1", "1_2")
+  rows_for_id <- which(ids == id)
+  
+  # Randomly select two different rows from possible_haplotypes
+  selected_haplotypes <- possible_haplotypes[sample(1:nrow(possible_haplotypes), 2, replace = FALSE), ]
+  
+  # Assign the selected haplotypes to the corresponding rows in new_slocihaplos
+  new_slocihaplos[rows_for_id[1], ] <- as.numeric(selected_haplotypes[1, ])
+  new_slocihaplos[rows_for_id[2], ] <- as.numeric(selected_haplotypes[2, ])
+}
+
+
+
+Parents=setMarkerHaplo(pop = Parents, haplo = new_slocihaplos)
 
 # Set a phenotype to founder parents
 Parents = setPheno(Parents, varE = VarE, reps = repECT)
