@@ -24,8 +24,8 @@ source(file = "00RUNME.R")
 ### Run scenarios #####
 setwd(file.path(main_dir))
 
-schemes <- c("01_PhenotypicSelection","10_PhenotypicSelection_sf_introgress_25",
-"10_PhenotypicSelection_sf_introgress_100","03_GenomicSelection", "11_GenomicSelection_sf_introgress_25", "11_GenomicSelection_sf_introgress_100")
+schemes <- c("01_PhenotypicSelection","07_PhenotypicSelection_withoutself",
+"03_GenomicSelection", "08_GenomicSelection_withoutself")
 
 
 #Removes previous results
