@@ -1,5 +1,5 @@
 # ##**************************************************************
-# ##******** Function for implementing Self-Incompatibility ******
+# ##******** ORIGINAL FUNCTION FOR Function for implementing Self-Incompatibility ******
 # ##**************************************************************
 # 
 # ## Arguments:
@@ -134,6 +134,10 @@
 ## nCrosses - the number of crosses performed
 ## nProgeny - the number of progeny per cross
 ## cross_plan - if applicable, a supplied cross plan for initial crossing
+
+## In prms
+## SIPos - vector with position
+## self_compatible_allele - generated in Create_parents
 
 ## Output:
 
@@ -274,6 +278,12 @@ randCrossGamSI <- function(prms, pop, nCrosses = NA,
 ## nCrosses - the number of crosses performed
 ## nProgeny - the number of progeny per cross
 ## cross_plan - if applicable, a supplied cross plan for initial crossing
+## percentage_selfcompatible - indicating a percentage compulsory of selfcompatibles seedlings 
+
+## In prms
+## SIPos - vector with position
+## self_compatible_allele - generated in Create_parents
+
 
 ## Output:
 
@@ -441,6 +451,8 @@ randCrossGamSI_selfcomp_compulsory <- function(prms, pop, nCrosses = NA,
 ##*
 ##*
 ##*
+
+
 
 selectind_selfcompatible<- function(original_pop,haploposition, self_compatible_allele, nindselectedtotal,
                                     percentage_selfcomp=0.5, use="pheno"){

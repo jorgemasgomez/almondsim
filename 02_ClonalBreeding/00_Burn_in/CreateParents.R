@@ -64,10 +64,9 @@ SP$addTraitADG(nQtlPerChr = nQtl,
 # Collect pedigree
 SP$setTrackPed(TRUE)
 
-#set positions si locus
+#set positions SI locus
 #We add +1 for self-compatible allele
 nmarkers_sloci <- ceiling(log2(nlocicompatibility+1))
-
 
 
 prefix <- sub("_.*", "", locuscompt_position)
