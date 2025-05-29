@@ -27,7 +27,10 @@ for(REP in 1:reps){
                       scenario = rep(scenarioName, nCycles),
                       meanG    = numeric(nCycles),
                       varG     = numeric(nCycles),
-                      accSel   = numeric(nCycles))
+                      accSel   = numeric(nCycles),
+                      HHIact1 = numeric(nCycles),
+                      HHIect1 = numeric(nCycles)
+                      )
 
   # ---- Create initial parents ----
   source(file = "CreateParents.R")
@@ -37,7 +40,11 @@ for(REP in 1:reps){
 
   # ---- Simulate year effects ----
   P = runif(nCycles)
-
+  
+  # Lista donde guardar HHI por año
+  parents_hhi_year_list <- list()
+  # lista donde se irán guardando los padres de cada año
+  
   # ---- Burn-in phase ----
   for(year in 1:nBurnin) {
     cat("  Working on burnin year:",year,"\n")
@@ -47,12 +54,37 @@ for(REP in 1:reps){
     # Report results
     output$meanG[year] = meanG(Seedlings)
     output$varG[year]  = varG(Seedlings)
+    
+    
+    # Obtener IDs combinados (madre + padre)
+    act1_ids <- c(as.character(ACT1@mother), as.character(ACT1@father))
+    ect1_ids <- c(as.character(ECT1@mother), as.character(ECT1@father))
+    
+    
+    # Calcular HHI
+    act1_freq <- table(act1_ids) / length(act1_ids)
+    print(act1_freq)
+    act1_hhi_raw <- sum(act1_freq^2)
+    act1_hhi_norm <- act1_hhi_raw
+    # act1_hhi_norm <- act1_hhi_raw / (1 / (nParents*2))
+    
+    ect1_freq <- table(ect1_ids) / length(ect1_ids)
+    ect1_hhi_raw <- sum(ect1_freq^2)
+    ect1_hhi_norm <- ect1_hhi_raw
+    # ect1_hhi_norm <- ect1_hhi_raw / (1 / (nParents*2))
+    
+    
+    output$HHIact1[year]=act1_hhi_norm
+    output$HHIect1[year]=ect1_hhi_norm
+    
   }
 
   save.image(paste0("../burn_in_folder/Burnin_", REP, ".RData"))
   # Save results from current replicate
   # results = append(results, list(output))
 }
+
+
 
 # Save results
 # saveRDS(results, file = paste0(scenarioName,REP,".rds"))
