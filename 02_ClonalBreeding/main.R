@@ -5,6 +5,7 @@ reps=50
 main_dir <- "C:/Users/Pheno/OneDrive - UNIVERSIDAD DE MURCIA/Escritorio/Almond_sim/almondsim/02_ClonalBreeding"
 # Cambiar a la carpeta del esquema
 setwd(main_dir)
+# Source some functions needed for crossing with selfincompatibility
 source(file = "compatible_crosses.R")
 pipeline<-TRUE
 
