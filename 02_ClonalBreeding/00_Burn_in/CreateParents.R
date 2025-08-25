@@ -111,7 +111,7 @@ possible_haplotypes <- possible_haplotypes[1:nlocicompatibility, ]
 
 self_compatible_allele<-as.data.frame(t(combinations))[nlocicompatibility+1,]
 
-#RANDOM ASIGNATION
+#RANDOM ASSIGNMETN
 
 # Extract unique IDs from the row names of slocihaplos
 rownames_split <- strsplit(rownames(slocihaplos), "_")  # Split row names by "_"
