@@ -1,3 +1,9 @@
 Error en el esquema: 01_PhenotypicSelection 
  Mensaje de error: objeto 'keep_objects' no encontrado 
 
+Error en el esquema: 01_PhenotypicSelection 
+ Mensaje de error: objeto 'n_years' no encontrado 
+
+Error en el esquema: 01_PhenotypicSelection 
+ Mensaje de error: objeto 'n_years' no encontrado 
+

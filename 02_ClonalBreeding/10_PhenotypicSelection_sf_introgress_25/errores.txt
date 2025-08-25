@@ -13,3 +13,15 @@ Error en el esquema: 10_PhenotypicSelection_sf_introgress_25
 Error en el esquema: 10_PhenotypicSelection_sf_introgress_25 
  Mensaje de error: selection trait has missing values, phenotype may need to be set 
 
+Error en el esquema: 10_PhenotypicSelection_sf_introgress_25 
+ Mensaje de error: replacement has 41 rows, data has 120 
+
+Error en el esquema: 10_PhenotypicSelection_sf_introgress_25 
+ Mensaje de error: replacement has 41 rows, data has 120 
+
+Error en el esquema: 10_PhenotypicSelection_sf_introgress_25 
+ Mensaje de error: replacement has 41 rows, data has 120 
+
+Error en el esquema: 10_PhenotypicSelection_sf_introgress_25 
+ Mensaje de error: replacement has 41 rows, data has 120 
+

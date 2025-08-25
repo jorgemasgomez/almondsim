@@ -12,11 +12,10 @@
 library(package = "AlphaSimR")
 
 # pipeline<-FALSE
-
+results <- list()
 if (pipeline) {
   scenarioName = "Pheno"
-  # ---- Create list to store results from reps ----
-  results = list()
+
   
   # ---- Future phase ----
   for(year in (nBurnin+1):(nBurnin+nFuture)) {
@@ -26,14 +25,78 @@ if (pipeline) {
     # Report results
     output$meanG[year] = meanG(Seedlings)
     output$varG[year]  = varG(Seedlings)
+
+    
+    for (stage in stages) {
+      stage_obj <- get(stage)  # Get the stage object by name
+      
+      # Calculate mean genetic value
+      mean_g <- meanG(stage_obj)
+      # Calculate genetic variance
+      var_g <- varG(stage_obj)
+      
+      # Store in output using dynamic column names
+      output[year, paste0("meanG_", stage)] <- mean_g
+      output[year, paste0("varG_", stage)]  <- var_g
+    }
+    
+    
+    
+
+    
+    # Inside your loop over years (e.g. for (year in 1:n_years))
+    for(stage in stages){
+      # Get the population object by name
+      pop <- get(stage)
+      
+      # Get mother and father IDs as characters
+      ids <- c(as.character(pop@mother), as.character(pop@father))
+      
+      # Calculate relative frequencies
+      freq <- table(ids) / length(ids)
+      
+      # Compute Herfindahl–Hirschman Index (HHI)
+      hhi_raw <- sum(freq^2)
+      
+      # Store the HHI value in the output list
+      output[[paste0("HHI", stage)]][year] <- hhi_raw
+    }
+    
+    pollenHaplo <-  pullMarkerHaplo(Seedlings,
+                                    markers = prms$SIPos,
+                                    haplo = 2)
+    pistilHaplo <-  pullMarkerHaplo(Seedlings,
+                                    markers = prms$SIPos,
+                                    haplo = 1)
+    combinedHaplo <- rbind(pistilHaplo, pollenHaplo)
+    # Convertir a caracteres para comparar fácilmente
+    haploStrings <- apply(combinedHaplo, 1, paste, collapse = "_")
+    
+    # Contar únicos
+    n_unique_haplotypes <- length(unique(haploStrings))
+    output$allelesSI[year]=n_unique_haplotypes
+    # Extraer genotipos SNP del cromosoma 6
+    geno_chr6 <- pullSnpGeno(Seedlings, snpChip = 1, chr = 6, simParam = SP)
+    
+    # La matriz geno_chr6 tiene filas = individuos, columnas = SNPs
+    # Calcular frecuencia alélica para cada SNP
+    allele_freqs <- colMeans(geno_chr6) / 2  # Si genotipo codificado 0,1,2 para número de alelos alternativos
+    
+    # Heterocigosidad esperada Hs = 2p(1-p)
+    Hs <- 2 * allele_freqs * (1 - allele_freqs)
+    
+    # Resumen de la diversidad en cromosoma 6
+    mean_Hs <- mean(Hs, na.rm = TRUE)
+    
+    # Mostrar resultado
+    output$He_chr6[year] = mean_Hs
+    
   }
   
-  # Save results from current replicate
-  results = append(results, list(output))
+    # Save results from current replicate
+    results = append(results, list(output))
   
-  
-  
-  
+
   
   
 } else {

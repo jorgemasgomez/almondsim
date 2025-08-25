@@ -1,0 +1,69 @@
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: objeto 'nFuture' no encontrado 
+
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: no se puede abrir la conexión 
+
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: no se puede abrir la conexión 
+
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: Error   : 1 singularities in the Average Information matrix.
+          : To continue the analysis anyway, try running it again with the optional argument ai.sing = TRUE 
+
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: Error   : 1 singularities in the Average Information matrix.
+          : To continue the analysis anyway, try running it again
+          : with the optional argument ai.sing = TRUE 
+
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: Error   : 1 singularities in the Average Information matrix.
+          : To continue the analysis anyway, try running it again with the optional argument ai.sing = TRUE 
+
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: Error   : 1 singularities in the Average Information matrix.
+          : To continue the analysis anyway, try running it again with the optional argument ai.sing = TRUE 
+
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: Error   : 1 singularities in the Average Information matrix.
+          : To continue the analysis anyway, try running it again
+          : with the optional argument ai.sing = TRUE 
+
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: Error   : 1 singularities in the Average Information matrix.
+          : To continue the analysis anyway, try running it again with the optional argument ai.sing = TRUE 
+
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: License error: License server does not support this product (-18)
+ 
+
+Error en el esquema: 02_PedigreeSelection 
+ Mensaje de error: License error: License server does not support this product (-18)
+ 
+
+Error en el esquema: 03_GenomicSelection 
+ Mensaje de error: License error: License server does not support this product (-18)
+ 
+
+Error en el esquema: 12_PedigreeSelection_sf_introgress_25 
+ Mensaje de error: objeto 'ETC1' no encontrado 
+
+Error en el esquema: 12_PedigreeSelection_sf_introgress_25 
+ Mensaje de error: objeto 'ETC1' no encontrado 
+
+Error en el esquema: 12_PedigreeSelection_sf_introgress_25 
+ Mensaje de error: subíndice fuera de  los límites 
+
+Error en el esquema: 12_PedigreeSelection_sf_introgress_25 
+ Mensaje de error: subíndice fuera de  los límites 
+
+Error en el esquema: 12_PedigreeSelection_sf_introgress_25 
+ Mensaje de error: subíndice fuera de  los límites 
+
+Error en el esquema: 12_PedigreeSelection_sf_introgress_25 
+ Mensaje de error: subíndice fuera de  los límites 
+
+Error en el esquema: 12_pedigreeselection_sf_introgress_25 
+ Mensaje de error: Error   : 1 singularities in the Average Information matrix.
+          : To continue the analysis anyway, try running it again with the optional argument ai.sing = TRUE 
+

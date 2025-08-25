@@ -11,10 +11,10 @@ ECT3 = setPheno(ECT2, varE = VarE, reps = repECT, p = P[year],h2 = c(0.5))
 ECT2 = ECT1
 
 # Stage 10
-ETC1=setEBV(ACT3, gsmodel, value = "bv")
-output$accSel[year] = cor(gv(ETC1), ebv(ETC1)) # accuracy based on 2000 inds
+ECT1=setEBV(ACT3, gsmodel, value = "bv")
+output$accSel[year] = cor(gv(ECT1), ebv(ECT1)) # accuracy based on 2000 inds
 # ECT1 = selectInd(ETC1, nInd = nClonesECT, use = "ebv")
-ECT1= selectind_selfcompatible(original_pop = ETC1, haploposition = prms$SIPos,
+ECT1= selectind_selfcompatible(original_pop = ECT1, haploposition = prms$SIPos,
                                self_compatible_allele = self_compatible_allele,nindselectedtotal = nClonesECT,
                                percentage_selfcomp = 0.5, use="ebv")
 

@@ -25,3 +25,15 @@ Error en el esquema: 11_GenomicSelection_sf_introgress_25
 Error en el esquema: 11_GenomicSelection_sf_introgress_25 
  Mensaje de error: subíndice fuera de  los límites 
 
+Error en el esquema: 11_GenomicSelection_sf_introgress_100 
+ Mensaje de error: replacement has 41 rows, data has 120 
+
+Error en el esquema: 11_GenomicSelection_sf_introgress_100 
+ Mensaje de error: replacement has 41 rows, data has 120 
+
+Error en el esquema: 11_GenomicSelection_sf_introgress_100 
+ Mensaje de error: replacement has 41 rows, data has 120 
+
+Error en el esquema: 11_GenomicSelection_sf_introgress_100 
+ Mensaje de error: replacement has 41 rows, data has 120 
+
