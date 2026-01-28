@@ -20,6 +20,8 @@ if (pipeline) {
   
   for(year in (nBurnin+1):(nBurnin+nFuture)) {
     cat("  Working on future year:",year,"\n")
+    # nParents   = 30     # CHECK NPARENTS
+    nClonesECT = 3        #check replacement presionselccion
     source(file = "RunModel_GS.R")    # Run pedigree model
     source(file = "UpdateParents.R")  # Pick parents
     source(file = "AdvanceYear_GS.R") # Advance yield trials by a year
@@ -27,27 +29,44 @@ if (pipeline) {
     # Report results
     output$meanG[year] = meanG(Seedlings)
     output$varG[year]  = varG(Seedlings)
-    # Obtener IDs combinados (madre + padre)
-    act1_ids <- c(as.character(ACT1@mother), as.character(ACT1@father))
-    ect1_ids <- c(as.character(ECT1@mother), as.character(ECT1@father))
-    
-    # Obtener IDs combinados (madre + padre)
-    act1_ids <- c(as.character(ACT1@mother), as.character(ACT1@father))
-    ect1_ids <- c(as.character(ECT1@mother), as.character(ECT1@father))
-    # Calcular HHI
-    act1_freq <- table(act1_ids) / length(act1_ids)
-    act1_hhi_raw <- sum(act1_freq^2)
-    act1_hhi_norm <- act1_hhi_raw
-    # act1_hhi_norm <- act1_hhi_raw / (1 / (nParents*2))
-    
-    ect1_freq <- table(ect1_ids) / length(ect1_ids)
-    ect1_hhi_raw <- sum(ect1_freq^2)
-    ect1_hhi_norm <- ect1_hhi_raw
-    # ect1_hhi_norm <- ect1_hhi_raw / (1 / (nParents*2))
     
     
-    output$HHIact1[year]=act1_hhi_norm
-    output$HHIect1[year]=ect1_hhi_norm
+    
+    for (stage in stages) {
+      stage_obj <- get(stage)  # Get the stage object by name
+      
+      # Calculate mean genetic value
+      mean_g <- meanG(stage_obj)
+      # Calculate genetic variance
+      var_g <- varG(stage_obj)
+      
+      # Store in output using dynamic column names
+      output[year, paste0("meanG_", stage)] <- mean_g
+      output[year, paste0("varG_", stage)]  <- var_g
+    }
+    
+    
+    
+    
+    # Inside your loop over years (e.g. for (year in 1:n_years))
+    for(stage in stages){
+      # Get the population object by name
+      pop <- get(stage)
+      
+      # Get mother and father IDs as characters
+      ids <- c(as.character(pop@mother), as.character(pop@father))
+      
+      # Calculate relative frequencies
+      freq <- table(ids) / length(ids)
+      
+      # Compute Herfindahl–Hirschman Index (HHI)
+      hhi_raw <- sum(freq^2)
+      
+      # Store the HHI value in the output list
+      output[[paste0("HHI", stage)]][year] <- hhi_raw
+    }
+    
+    
     
     pollenHaplo <-  pullMarkerHaplo(Seedlings,
                                     markers = prms$SIPos,
@@ -62,6 +81,7 @@ if (pipeline) {
     # Contar únicos
     n_unique_haplotypes <- length(unique(haploStrings))
     output$allelesSI[year]=n_unique_haplotypes
+    
     # Extraer genotipos SNP del cromosoma 6
     geno_chr6 <- pullSnpGeno(Seedlings, snpChip = 1, chr = 6, simParam = SP)
     
@@ -76,8 +96,12 @@ if (pipeline) {
     mean_Hs <- mean(Hs, na.rm = TRUE)
     
     # Mostrar resultado
-    output$He_chr6[year] = mean_Hs}
-  # Save results from current replicate
+    output$He_chr6[year] = mean_Hs
+    
+  }
+  
+  
+  # Guarda resultados del año actual
   results = append(results, list(output))
   
   

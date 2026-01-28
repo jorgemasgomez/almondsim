@@ -1,13 +1,13 @@
 #Execute all
 rm(list = ls())
 
-reps=50
+reps=10
 main_dir <- "C:/Users/Pheno/OneDrive - UNIVERSIDAD DE MURCIA/Escritorio/Almond_sim/almondsim/02_ClonalBreeding"
 # Cambiar a la carpeta del esquema
 setwd(main_dir)
 source(file = "compatible_crosses.R")
 pipeline<-TRUE
-
+parents_df <- data.frame()
 
 # ###### Burn-in #####
 
@@ -22,8 +22,22 @@ source(file = "00RUNME.R")
 
 
 
+
+
+
 ### Run scenarios #####
 setwd(file.path(main_dir))
+
+schemes <- c( "03_GenomicSelection_OCS", "03_GenomicSelection_OCS_cond2")
+
+# schemes <- c("03_GenomicSelection","03_GenomicSelection_OCS_5", "03_GenomicSelection_OCS_10", "03_GenomicSelection_OCS_15",
+#              "03_GenomicSelection_OCS_20", "03_GenomicSelection_OCS_25", "03_GenomicSelection_OCS_30",
+#              "03_GenomicSelection_OCS_35", "03_GenomicSelection_OCS_40",
+#              "03_GenomicSelection_ORS_5", "03_GenomicSelection_ORS_10", "03_GenomicSelection_ORS_15",
+#              "03_GenomicSelection_ORS_20", "03_GenomicSelection_ORS_25", "03_GenomicSelection_ORS_30",
+#              "03_GenomicSelection_ORS_35", "03_GenomicSelection_ORS_40")
+
+# schemes <- c("03_GenomicSelection_OCS_Ne_100","03_GenomicSelection_OCS_Ne_50", "03_GenomicSelection_OCS_Ne_75"
 
 # schemes <- c("01_phenotypicselection","02_pedigreeselection",
 # "03_genomicselection",
@@ -31,16 +45,42 @@ setwd(file.path(main_dir))
 # "11_genomicselection_sf_introgress_100","11_genomicselection_sf_introgress_25",
 # "12_pedigreeselection_sf_introgress_25", "12_pedigreeselection_sf_introgress_100")
 
-schemes <- c("01_PhenotypicSelection",
-"03_GenomicSelection", "03_GenomicSelection_OCS_5","03_GenomicSelection_OCS_10","03_GenomicSelection_OCS_15",
-"03_GenomicSelection_OCS_20","03_GenomicSelection_OCS_25","03_GenomicSelection_OCS_30")
+# schemes <- c("01_PhenotypicSelection",
+# "03_GenomicSelection", "03_GenomicSelection_OCS_5","03_GenomicSelection_OCS_10","03_GenomicSelection_OCS_15",
+# "03_GenomicSelection_OCS_20","03_GenomicSelection_OCS_25","03_GenomicSelection_OCS_30", "03_GenomicSelection_OCS_35",
+# "03_GenomicSelection_OCS_40")
 
-# schemes <- c("03_genomicselection_ocs")
+# schemes <- c(
+#              "03_GenomicSelection", "03_GenomicSelection_OCS_25","03_GenomicSelection_OCS_30", "03_GenomicSelection_OCS_35",
+#              "03_GenomicSelection_OCS_40")
+
+
+
+# schemes <- c("01_PhenotypicSelection", "03_GenomicSelection", "03_GenomicSelection_nparent_20",
+#              "03_GenomicSelection_nparent_40", "03_GenomicSelection_nparent_50", "03_GenomicSelection_nparent_60")
 
 # schemes <- c("10_PhenotypicSelection_sf_introgress_100", "10_PhenotypicSelection_sf_introgress_25",
 #              "11_GenomicSelection_sf_introgress_100","11_GenomicSelection_sf_introgress_25",
 #              "12_PedigreeSelection_sf_introgress_25", "12_PedigreeSelection_sf_introgress_100")
 
+# schemes <- c("01_phenotypicselection", "03_genomicselection", "03_GenomicSelection_ectsel_5", "03_GenomicSelection_ectsel_10",
+#              "03_GenomicSelection_ectsel_15")
+
+# schemes <- c("01_phenotypicselection","02_pedigreeselection", "03_genomicselection")
+
+# schemes <- c("01_phenotypicselection","02_pedigreeselection", "03_genomicselection",
+#              "03_GenomicSelection_OCS_5",
+#              "03_GenomicSelection_OCS_15",
+#              "03_GenomicSelection_OCS_30",
+#              "03_GenomicSelection_OCS_35",
+#              "03_GenomicSelection_OCS_40")
+
+# schemes <- c( "08_GenomicSelection_withoutself")
+
+
+if (file.exists("parent_tracking.txt")) {
+  file.remove("parent_tracking.txt")  # Elimina el archivo
+}
 
 
 #Removes previous results
@@ -72,7 +112,8 @@ for (REP in 1:reps){
       setwd(file.path(main_dir, scheme))
       
       keep_objects <- c("scheme", "main_dir","schemes", "REP","reps","stages","nBurnin","pipeline","randCrossGamSI",
-                        "self_compatible_allele", "selectind_selfcompatible", "randCrossGamSI_selfcomp_compulsory")
+                        "self_compatible_allele", "selectind_selfcompatible", "randCrossGamSI_selfcomp_compulsory"
+                      )
       
       # Eliminar todo menos los objetos especificados
       rm(list = setdiff(ls(), keep_objects))
@@ -85,6 +126,10 @@ for (REP in 1:reps){
       # Combinar los resultados
       combined_df <- do.call(rbind, results)
       combined_df$scenario[combined_df$year >= nBurnin+1] <- scenarioName
+      
+
+      
+      
       # Volver al directorio principal
       setwd("../")
       
@@ -94,6 +139,8 @@ for (REP in 1:reps){
       } else {
         write.table(combined_df, "results_all_schemes.txt", sep = "\t", row.names = FALSE, quote = FALSE, col.names = TRUE)
       }
+      
+
       
 
       
@@ -426,3 +473,5 @@ for (sc in scenarios) {
     sep = "\t", row.names = FALSE, quote = FALSE
   )
 }
+
+

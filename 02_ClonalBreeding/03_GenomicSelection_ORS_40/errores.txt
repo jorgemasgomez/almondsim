@@ -1,0 +1,69 @@
+Error en el esquema: 06_GenomicSelection_early_selection_extreme 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 06_GenomicSelection_early_selection_extreme 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 06_GenomicSelection_early_selection_extreme 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 03_GenomicSelection 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 03_GenomicSelection 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 03_GenomicSelection 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 03_GenomicSelection 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 03_GenomicSelection 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 03_GenomicSelection 
+ Mensaje de error: objeto 'n_years' no encontrado 
+
+Error en el esquema: 03_GenomicSelection 
+ Mensaje de error: objeto 'n_years' no encontrado 
+
+Error en el esquema: 03_GenomicSelection_OCS 
+ Mensaje de error: el argumento no fue usado (simParam) 
+
+Error en el esquema: 03_genomicselection_ocs 
+ Mensaje de error: no se pudo encontrar la función "orderInd" 
+
+Error en el esquema: 03_genomicselection_ocs 
+ Mensaje de error: no se pudo encontrar la función "orderInd" 
+
+Error en el esquema: 03_genomicselection_ocs 
+ Mensaje de error: objeto 'cand_idx' no encontrado 
+
+Error en el esquema: 03_genomicselection_ocs 
+ Mensaje de error: objeto 'cand_idx' no encontrado 
+
+Error en el esquema: 03_genomicselection_ocs 
+ Mensaje de error: objeto 'ECT1_ord' no encontrado 
+
+Error en el esquema: 03_genomicselection_ocs 
+ Mensaje de error: objeto 'ECT1_ord' no encontrado 
+
+Error en el esquema: 03_genomicselection_ocs 
+ Mensaje de error: Argumento no numérico para una función matemática 
+
+Error en el esquema: 03_genomicselection_ocs 
+ Mensaje de error: Argumento no numérico para una función matemática 
+
+Error en el esquema: 03_genomicselection_ocs 
+ Mensaje de error: no applicable method for `@` applied to an object of class "character" 
+
+Error en el esquema: 03_genomicselection_ocs 
+ Mensaje de error: no applicable method for `@` applied to an object of class "character" 
+
+Error en el esquema: 03_GenomicSelection_OCS_30 
+ Mensaje de error: UpdateParents.R:58:1: inesperado '}'
+57:   }
+58: }
+    ^ 
+

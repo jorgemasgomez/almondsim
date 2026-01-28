@@ -56,3 +56,32 @@ Error en el esquema: 02_pedigreeselection
  Mensaje de error: Error   : 1 singularities in the Average Information matrix.
           : To continue the analysis anyway, try running it again with the optional argument ai.sing = TRUE 
 
+Error en el esquema: 02_pedigreeselection 
+ Mensaje de error: Error   : 1 singularities in the Average Information matrix.
+          : To continue the analysis anyway, try running it again
+          : with the optional argument ai.sing = TRUE 
+
+Error en el esquema: 02_pedigreeselection 
+ Mensaje de error: Error   : The estimation was aborted; too many exceptions. 
+
+Error en el esquema: 02_pedigreeselection 
+ Mensaje de error: Error   : 1 singularities in the Average Information matrix.
+          : To continue the analysis anyway, try running it again with the optional argument ai.sing = TRUE 
+
+Error en el esquema: 02_pedigreeselection 
+ Mensaje de error: Error   : 1 singularities in the Average Information matrix.
+          : To continue the analysis anyway, try running it again with the optional argument ai.sing = TRUE 
+
+Error en el esquema: 02_pedigreeselection 
+ Mensaje de error: Error   : 1 singularities in the Average Information matrix.
+          : To continue the analysis anyway, try running it again with the optional argument ai.sing = TRUE 
+
+Error en el esquema: 02_pedigreeselection 
+ Mensaje de error: argument 13 is empty 
+
+Error en el esquema: 02_pedigreeselection 
+ Mensaje de error: argument 13 is empty 
+
+Error en el esquema: 02_pedigreeselection 
+ Mensaje de error: argument 13 is empty 
+

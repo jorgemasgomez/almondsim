@@ -55,6 +55,8 @@ for(REP in 1:reps){
     matrix(numeric(nCycles * length(meanG_cols)), ncol = length(meanG_cols), dimnames = list(NULL, meanG_cols)),
     matrix(numeric(nCycles * length(varG_cols)),  ncol = length(varG_cols),  dimnames = list(NULL, varG_cols))
   )
+  
+
 
   # ---- Create initial parents ----
   source(file = "CreateParents.R")
@@ -77,6 +79,8 @@ for(REP in 1:reps){
     # Report results
     output$meanG[year] = meanG(Seedlings)
     output$varG[year]  = varG(Seedlings)
+    
+
 
     for (stage in stages) {
       stage_obj <- get(stage)  # Get the stage object by name
@@ -143,6 +147,8 @@ for(REP in 1:reps){
     
     #Save
     output$He_chr6[year] = mean_Hs
+    
+
     
   }
 

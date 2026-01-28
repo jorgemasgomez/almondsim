@@ -78,6 +78,20 @@ randCrossGamSI <- function(prms, pop, nCrosses = NA,
     
     ## Select all the offspring resulting from compatible
     ## crosses
+    
+    #Select exact progeny
+    
+    if (exists("newPop")) {
+      numberofindiv <- min(
+        length(compatibleCrosses),
+        (nProgeny * nCrosses) - length(newPop@id)
+      )
+    } else {
+      numberofindiv <- length(compatibleCrosses)
+    }
+
+    
+    
     if(!prms$random_failure){
       if(packageVersion("AlphaSimR")<"1.5.3")
         ## After updating to AlphaSimR version 1.5.3 this no longer is working...
@@ -85,14 +99,14 @@ randCrossGamSI <- function(prms, pop, nCrosses = NA,
                             use = "rand",
                             candidates =
                               as.character(compatibleCrosses),
-                            nInd = length(compatibleCrosses))
+                            nInd = numberofindiv )
       
       if(packageVersion("AlphaSimR")>="1.5.3")
         ## After updating to AlphaSimR version 1.5.3 this works
         newPop_prev <- selectInd(candidateOffspring,
                             use = "rand",
                             candidates = candidateOffspring@id[compatibleCrosses],
-                            nInd = length(compatibleCrosses))
+                            nInd = numberofindiv )
         
     if(whileloopcount==0){
       newPop = newPop_prev

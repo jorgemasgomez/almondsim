@@ -7,3 +7,12 @@ Error en el esquema: 01_PhenotypicSelection
 Error en el esquema: 01_PhenotypicSelection 
  Mensaje de error: objeto 'n_years' no encontrado 
 
+Error en el esquema: 01_phenotypicselection 
+ Mensaje de error: argument 13 is empty 
+
+Error en el esquema: 01_phenotypicselection 
+ Mensaje de error: argument 13 is empty 
+
+Error en el esquema: 01_phenotypicselection 
+ Mensaje de error: argument 13 is empty 
+

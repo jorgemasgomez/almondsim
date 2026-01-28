@@ -91,6 +91,8 @@ if (pipeline) {
     # Mostrar resultado
     output$He_chr6[year] = mean_Hs
     
+
+    
   }
   
     # Save results from current replicate

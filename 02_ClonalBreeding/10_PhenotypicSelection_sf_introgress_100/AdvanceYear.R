@@ -52,3 +52,4 @@ prms<- list(SIPos=locuscompt_position_vector, random_failure=FALSE)
 # F1 = randCrossGamSI(prms = prms,pop = Parents, nCrosses = nCrosses, nProgeny = nProgeny)
 F1= randCrossGamSI_selfcomp_compulsory(prms = prms,pop = Parents, nCrosses = nCrosses, nProgeny = nProgeny,
                                        percentage_selfcompatible = 1)
+Parents = setPheno(Parents, varE = VarE, reps = repECT, p = P[year], h2 = c(0.5))

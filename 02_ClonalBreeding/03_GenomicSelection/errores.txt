@@ -28,3 +28,15 @@ Error en el esquema: 03_GenomicSelection
 Error en el esquema: 03_GenomicSelection 
  Mensaje de error: objeto 'n_years' no encontrado 
 
+Error en el esquema: 03_genomicselection 
+ Mensaje de error: argument 13 is empty 
+
+Error en el esquema: 03_genomicselection 
+ Mensaje de error: argument 13 is empty 
+
+Error en el esquema: 03_genomicselection 
+ Mensaje de error: argument 13 is empty 
+
+Error en el esquema: 03_GenomicSelection 
+ Mensaje de error: no se puede abrir la conexión 
+

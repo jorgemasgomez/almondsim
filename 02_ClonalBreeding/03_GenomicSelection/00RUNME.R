@@ -20,6 +20,7 @@ if (pipeline) {
   
   for(year in (nBurnin+1):(nBurnin+nFuture)) {
     cat("  Working on future year:",year,"\n")
+
     source(file = "RunModel_GS.R")    # Run pedigree model
     source(file = "UpdateParents.R")  # Pick parents
     source(file = "AdvanceYear_GS.R") # Advance yield trials by a year
@@ -27,6 +28,8 @@ if (pipeline) {
     # Report results
     output$meanG[year] = meanG(Seedlings)
     output$varG[year]  = varG(Seedlings)
+    
+
     
 
     
@@ -95,6 +98,9 @@ if (pipeline) {
     
     # Mostrar resultado
     output$He_chr6[year] = mean_Hs
+    
+
+    
     
     }
   

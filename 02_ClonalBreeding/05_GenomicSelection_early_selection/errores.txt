@@ -4,3 +4,6 @@ Error en el esquema: 06_GenomicSelection_early_selection_extreme
 Error en el esquema: 06_GenomicSelection_early_selection_extreme 
  Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
 
+Error en el esquema: 05_GenomicSelection_early_selection 
+ Mensaje de error: replacement has 41 rows, data has 120 
+

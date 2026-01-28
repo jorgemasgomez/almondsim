@@ -28,36 +28,22 @@ Error en el esquema: 03_GenomicSelection
 Error en el esquema: 03_GenomicSelection 
  Mensaje de error: objeto 'n_years' no encontrado 
 
+Error en el esquema: 03_genomicselection 
+ Mensaje de error: argument 13 is empty 
+
+Error en el esquema: 03_genomicselection 
+ Mensaje de error: argument 13 is empty 
+
+Error en el esquema: 03_genomicselection 
+ Mensaje de error: argument 13 is empty 
+
 Error en el esquema: 03_GenomicSelection_OCS 
- Mensaje de error: el argumento no fue usado (simParam) 
+ Mensaje de error: Data frame 'phen' contains individuals not included in argument sKin.
+ 
 
-Error en el esquema: 03_genomicselection_ocs 
- Mensaje de error: no se pudo encontrar la función "orderInd" 
+Error en el esquema: 03_GenomicSelection_OCS_10 
+ Mensaje de error: all(classes == "Pop") is not TRUE 
 
-Error en el esquema: 03_genomicselection_ocs 
- Mensaje de error: no se pudo encontrar la función "orderInd" 
-
-Error en el esquema: 03_genomicselection_ocs 
- Mensaje de error: objeto 'cand_idx' no encontrado 
-
-Error en el esquema: 03_genomicselection_ocs 
- Mensaje de error: objeto 'cand_idx' no encontrado 
-
-Error en el esquema: 03_genomicselection_ocs 
- Mensaje de error: objeto 'ECT1_ord' no encontrado 
-
-Error en el esquema: 03_genomicselection_ocs 
- Mensaje de error: objeto 'ECT1_ord' no encontrado 
-
-Error en el esquema: 03_genomicselection_ocs 
- Mensaje de error: Argumento no numérico para una función matemática 
-
-Error en el esquema: 03_genomicselection_ocs 
- Mensaje de error: Argumento no numérico para una función matemática 
-
-Error en el esquema: 03_genomicselection_ocs 
- Mensaje de error: no applicable method for `@` applied to an object of class "character" 
-
-Error en el esquema: 03_genomicselection_ocs 
- Mensaje de error: no applicable method for `@` applied to an object of class "character" 
+Error en el esquema: 03_GenomicSelection_OCS_10 
+ Mensaje de error: all(classes == "Pop") is not TRUE 
 

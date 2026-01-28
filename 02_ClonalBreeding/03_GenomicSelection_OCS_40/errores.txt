@@ -1,0 +1,76 @@
+Error en el esquema: 06_GenomicSelection_early_selection_extreme 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 06_GenomicSelection_early_selection_extreme 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 06_GenomicSelection_early_selection_extreme 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 03_GenomicSelection 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 03_GenomicSelection 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 03_GenomicSelection 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 03_GenomicSelection 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 03_GenomicSelection 
+ Mensaje de error: no applicable method for `@` applied to an object of class "logical" 
+
+Error en el esquema: 03_GenomicSelection 
+ Mensaje de error: objeto 'n_years' no encontrado 
+
+Error en el esquema: 03_GenomicSelection 
+ Mensaje de error: objeto 'n_years' no encontrado 
+
+Error en el esquema: 03_genomicselection 
+ Mensaje de error: argument 13 is empty 
+
+Error en el esquema: 03_genomicselection 
+ Mensaje de error: argument 13 is empty 
+
+Error en el esquema: 03_genomicselection 
+ Mensaje de error: argument 13 is empty 
+
+Error en el esquema: 03_GenomicSelection_OCS 
+ Mensaje de error: Data frame 'phen' contains individuals not included in argument sKin.
+ 
+
+Error en el esquema: 03_GenomicSelection_OCS_40 
+ Mensaje de error: all(classes == "Pop") is not TRUE 
+
+Error en el esquema: 03_GenomicSelection_OCS_40 
+ Mensaje de error: all(classes == "Pop") is not TRUE 
+
+Error en el esquema: 03_GenomicSelection_OCS_40 
+ Mensaje de error: all(classes == "Pop") is not TRUE 
+
+Error en el esquema: 03_GenomicSelection_OCS_40 
+ Mensaje de error: all(classes == "Pop") is not TRUE 
+
+Error en el esquema: 03_GenomicSelection_OCS_40 
+ Mensaje de error: all(classes == "Pop") is not TRUE 
+
+Error en el esquema: 03_GenomicSelection_OCS_40 
+ Mensaje de error: all(classes == "Pop") is not TRUE 
+
+Error en el esquema: 03_GenomicSelection_OCS_40 
+ Mensaje de error: all(classes == "Pop") is not TRUE 
+
+Error en el esquema: 03_GenomicSelection_OCS_40 
+ Mensaje de error: all(classes == "Pop") is not TRUE 
+
+Error en el esquema: 03_GenomicSelection_OCS_40 
+ Mensaje de error: no applicable method for `@` applied to an object of class "list" 
+
+Error en el esquema: 03_GenomicSelection_OCS_40 
+ Mensaje de error: all(classes == "Pop") is not TRUE 
+
+Error en el esquema: 03_GenomicSelection_OCS_40 
+ Mensaje de error: all(classes == "Pop") is not TRUE 
+

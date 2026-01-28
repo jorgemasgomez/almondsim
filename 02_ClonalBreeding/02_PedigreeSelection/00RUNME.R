@@ -34,7 +34,7 @@ if (pipeline) {
     # Report results
     output$meanG[year] = meanG(Seedlings)
     output$varG[year]  = varG(Seedlings)
-    
+
     
     for (stage in stages) {
       stage_obj <- get(stage)  # Get the stage object by name
@@ -100,6 +100,7 @@ if (pipeline) {
     # Mostrar resultado
     output$He_chr6[year] = mean_Hs
     
+
   }
   
   # Save results from current replicate
