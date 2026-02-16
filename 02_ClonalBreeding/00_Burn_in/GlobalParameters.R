@@ -8,7 +8,7 @@ startRecords = 35 # Year when training and pedigree record collecting begins
 nCycles = nBurnin + nFuture
 
 # ---- Genome simulation ----
-nChr    = 1      # Number of chromosomes
+nChr    = 1      # Number of chromosomes # ignored? consider removing for clarity
 nQtl    = 160     # Number of QTL per chromosome: 15 chr x 160 QTL = 2400 QTLs
 nSnp    = 600     # Simulate SNP chip with 9000 markers
 genLen  = 1       # Genetic length
