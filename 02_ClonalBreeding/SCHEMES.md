@@ -22,8 +22,7 @@
 20_GS_2_Early1500_OCS_Diversity
 21_GS_2_Early1500_OCS_Balanced
 22_GS_2_Early1500_OCS_Gain
-23_GS_2_Early1500_OPR_Diversity
-24_GS_2_Early1500_OPR_Balanced
-25_GS_2_Early1500_OPR_Gain
 
-00_Burn_in is shared initialization. main.R validates and launches these 25 schemes.
+00_Burn_in is shared initialization. main.R validates and launches these 22 schemes.
+
+Additional standalone experimental scenarios: 27_GS_SpeedBreeding_Early1500 and 28_GS_SpeedBreeding_Early1500_OCS. OPR scenarios and scenario 26 have been removed from the active design.

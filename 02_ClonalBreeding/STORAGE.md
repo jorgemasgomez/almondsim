@@ -1,6 +1,6 @@
 # Code and external simulation data
 
-The active experiment contains 25 scenarios, including GS-2 early1500 OPR Diversity (5%), Balanced (10%), and Gain (20%). See `02_ClonalBreeding/OPR_design.md`.
+The active experiment contains 22 scenarios. Speed breeding scenarios 27 and 28 are standalone experiments. OPR scenarios and scenario 26 were removed from the active design.
 
 Run `02_ClonalBreeding/main.R` for the full comparison, or a scenario's `00RUNME.R` directly under `02_ClonalBreeding/<scenario>`. Results and burn-in snapshots for new active runs are generated outside this repository in the sibling `almondsim_data/redesigned_runs` directory. Set the environment variable `ALMONDSIM_DATA_DIR` to choose a different external directory. Legacy haplotypes are read from `<data directory>/Haplotypes`.
 

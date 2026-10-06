@@ -51,13 +51,6 @@ redesign_scenarios <- function(root=NULL) {
   ocs$scenario_id <- paste0('GS_Y2_Early1500_OCS_',labels)
   expected <- rbind(expected,ocs)
   expected$opr_max_diversity_loss <- NA_real_
-  opr <- expected[rep(which(expected$folder_name=='GS_2_Early1500'),3),,drop=FALSE]
-  opr$opr_max_diversity_loss <- c(.05,.10,.20)
-  opr$new_parents_per_year <- NA_integer_
-  opr$renewal_percent <- NA_real_
-  opr$folder_name <- paste0('GS_2_Early1500_OPR_',c('Diversity','Balanced','Gain'))
-  opr$scenario_id <- paste0('GS_Y2_Early1500_OPR_',c('Diversity','Balanced','Gain'))
-  expected <- rbind(expected,opr)
   expected$folder_name <- sprintf('%02d_%s',seq_len(nrow(expected)),expected$folder_name)
   if(is.null(root)) return(expected)
   rows <- lapply(seq_len(nrow(expected)),function(index) {

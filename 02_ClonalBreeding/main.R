@@ -1,4 +1,4 @@
-# Active experiment: 25 schemes: 19 base, three OCS and three sequential OPR comparisons.
+# Active experiment: 22 schemes: 19 base and three OCS comparisons.
 # Historical scripts and results remain in their original folders.
 rm(list=ls())
 .libPaths(c('C:/Users/franc/AppData/Local/R/win-library/4.4',.libPaths()))
