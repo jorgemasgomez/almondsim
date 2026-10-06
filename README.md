@@ -25,3 +25,6 @@ If you use this material, please cite the above publication and the original Alp
       journal = {G3: Genes|Genomes|Genetics}
     }
 
+
+
+See [current experiment and external data storage](02_ClonalBreeding/STORAGE.md).

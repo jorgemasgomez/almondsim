@@ -40,3 +40,33 @@ vignettes/*.pdf
 
 # Mac OS custom attributes file
 .DS_Store
+
+# Generated simulation data: keep outside the code repository
+**/Haplotypes/
+**/burn_in_folder/
+**/parallel_runs/
+**/redesigned_runs/
+**/plots/
+*.rds
+*.RData
+*.RDataTmp*
+*.rda
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.svg
+*.tiff
+*.log
+*.trees
+*.tsv
+*.csv
+*.xlsx
+*.zip
+*.bak
+**/*_latest.txt
+**/results*.txt
+**/summary*.txt
+**/error*.txt
+**/Chr_*_gmatrix.txt
+**/Chr_*_position.txt

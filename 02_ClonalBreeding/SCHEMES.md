@@ -1,0 +1,29 @@
+# Active schemes in design order
+
+01_Pheno_8
+02_Pedigree_8
+03_GS_8
+04_Pheno_6
+05_Pedigree_6
+06_GS_6
+07_Pheno_4
+08_Pedigree_4
+09_GS_4
+10_Pheno_2
+11_Pedigree_2
+12_GS_2
+13_Pedigree_8_Early1500
+14_GS_8_Early1500
+15_Pedigree_2_Early1500
+16_GS_2_Early1500
+17_GS_2_Early1500_R50
+18_GS_2_Early1500_R75
+19_GS_2_Early1500_R100
+20_GS_2_Early1500_OCS_Diversity
+21_GS_2_Early1500_OCS_Balanced
+22_GS_2_Early1500_OCS_Gain
+23_GS_2_Early1500_OPR_Diversity
+24_GS_2_Early1500_OPR_Balanced
+25_GS_2_Early1500_OPR_Gain
+
+00_Burn_in is shared initialization. main.R validates and launches these 25 schemes.

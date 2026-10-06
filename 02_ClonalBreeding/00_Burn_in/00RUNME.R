@@ -13,22 +13,31 @@ library(package = "AlphaSimR")
 
 # ---- Load global parameters ----
 source(file = "GlobalParameters.R")
+# Optional cycle overrides used by short validation runs.
+if (!is.null(getOption("almond.burnin_years"))) {
+  nBurnin = as.integer(getOption("almond.burnin_years"))
+  startRecords = min(startRecords, nBurnin - 2L)
+}
+if (!is.null(getOption("almond.future_years"))) {
+  nFuture = as.integer(getOption("almond.future_years"))
+}
+nCycles = nBurnin + nFuture
 scenarioName = "Burn_in"
 
 # ---- Create list to store results from reps ----
 results = list()
 
-for(REP in 1:reps){
+for(REP in getOption("almond.rep_ids", seq_len(reps))){
   cat("Working on REP:", REP,"\n")
-  
-  stages <- c("Parents","ECT3", "ECT2", "ECT1", "ACT3", "ACT2", "ACT1", 
+
+  stages <- c("Parents","ECT3", "ECT2", "ECT1", "ACT3", "ACT2", "ACT1",
               "HPT4", "HPT3", "HPT2", "HPT1", "Seedlings", "F1")
 
   # ---- Create a data frame to track key parameters ----
   # Create all meanG and varG column names for each stage
   meanG_cols <- paste0("meanG_", stages)
   varG_cols  <- paste0("varG_", stages)
-  
+
   output = data.frame(
     year     = 1:nCycles,
     rep      = rep(REP, nCycles),
@@ -50,12 +59,12 @@ for(REP in 1:reps){
     HHIF1    = numeric(nCycles),
     He_chr6 = numeric(nCycles),
     allelesSI= numeric(nCycles),
-    
+
     # Add dynamic columns for each stage's meanG and varG
     matrix(numeric(nCycles * length(meanG_cols)), ncol = length(meanG_cols), dimnames = list(NULL, meanG_cols)),
     matrix(numeric(nCycles * length(varG_cols)),  ncol = length(varG_cols),  dimnames = list(NULL, varG_cols))
   )
-  
+
 
 
   # ---- Create initial parents ----
@@ -66,10 +75,10 @@ for(REP in 1:reps){
 
   # ---- Simulate year effects ----
   P = runif(nCycles)
-  
+
 
   # lista donde se irán guardando los padres de cada año
-  
+
   # ---- Burn-in phase ----
   for(year in 1:nBurnin) {
     cat("  Working on burnin year:",year,"\n")
@@ -79,44 +88,44 @@ for(REP in 1:reps){
     # Report results
     output$meanG[year] = meanG(Seedlings)
     output$varG[year]  = varG(Seedlings)
-    
+
 
 
     for (stage in stages) {
       stage_obj <- get(stage)  # Get the stage object by name
-      
+
       # Calculate mean genetic value
       mean_g <- meanG(stage_obj)
       # Calculate genetic variance
       var_g <- varG(stage_obj)
-      
+
       # Store in output using dynamic column names
       output[year, paste0("meanG_", stage)] <- mean_g
       output[year, paste0("varG_", stage)]  <- var_g
     }
-    
-    
-    
-    
+
+
+
+
     # Inside your loop over years (e.g. for (year in 1:n_years))
     for(stage in stages){
       # Get the population object by name
       pop <- get(stage)
-      
+
       # Get mother and father IDs as characters
       ids <- c(as.character(pop@mother), as.character(pop@father))
-      
+
       # Calculate relative frequencies
       freq <- table(ids) / length(ids)
-      
+
       # Compute Herfindahl–Hirschman Index (HHI)
       hhi_raw <- sum(freq^2)
-      
+
       # Store the HHI value in the output list
       output[[paste0("HHI", stage)]][year] <- hhi_raw
     }
-    
-    
+
+
     pollenHaplo <-  pullMarkerHaplo(Seedlings,
                                     markers = prms$SIPos,
                                     haplo = 2)
@@ -130,26 +139,26 @@ for(REP in 1:reps){
     # Unique count
     n_unique_haplotypes <- length(unique(haploStrings))
     output$allelesSI[year]=n_unique_haplotypes
-    
-    
+
+
     # Extract genotypes in chr 6
     geno_chr6 <- pullSnpGeno(Seedlings, snpChip = 1, chr = 6, simParam = SP)
-    
-    # 
+
+    #
     # Allelic frequency per snp
     allele_freqs <- colMeans(geno_chr6) / 2  # Si genotipo codificado 0,1,2 para número de alelos alternativos
-    
+
     # Expected heterocigosity Hs = 2p(1-p)
     Hs <- 2 * allele_freqs * (1 - allele_freqs)
-    
+
     # Mean
     mean_Hs <- mean(Hs, na.rm = TRUE)
-    
+
     #Save
     output$He_chr6[year] = mean_Hs
-    
 
-    
+
+
   }
 
   save.image(paste0("../burn_in_folder/Burnin_", REP, ".RData"))
@@ -165,5 +174,3 @@ for(REP in 1:reps){
 
 # ---- Analyze results ----
 # source(file = "ANALYZERESULTS.R")
-
-

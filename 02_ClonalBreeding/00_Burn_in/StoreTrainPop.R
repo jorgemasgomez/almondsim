@@ -45,3 +45,15 @@ if (year > startRecords & year < nBurnin+1) {
  }
 
 
+
+# Separate HPT4 history for GS: keep the three most recent cohorts.
+if (year >= startRecords) {
+  HPT4@fixEff = as.integer(rep(year, nInd(HPT4)))
+  if (year == startRecords) {
+    trainPopHPT4 = HPT4
+  } else {
+    trainPopHPT4 = c(trainPopHPT4, HPT4)
+  }
+  retainedHPT4Years = tail(sort(unique(trainPopHPT4@fixEff)), 3)
+  trainPopHPT4 = trainPopHPT4[which(trainPopHPT4@fixEff %in% retainedHPT4Years)]
+}

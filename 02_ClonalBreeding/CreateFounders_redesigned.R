@@ -6,7 +6,7 @@
 #                       segSites = nQtl + nSnp,
 #                       genLen   = genLen,
 #                       mutRate  = mutRate)
-#
+# 
 # # Set simulation parameters
 
 
@@ -21,25 +21,28 @@ haplotypes <- list()
 # Definir tasa de recombinación como una lista con 8 valores
 recombination_rate_test <- c(1.97036e-08, 1.51361e-08, 1.886e-08, 2.22347e-8,2.54212e-8,1.9829e-8,2.61388e-8,2.11591e-8)
 
-# Iterar sobre los cromosomas del 1 al 8
-for (i in 1:8) {
-  # Leer el archivo de posiciones
-  genMap_temp <- scan(paste0(getOption("almond.input_dir", ".."), "/Haplotypes/Chr_", i, "_position.txt"))
-
-  # Convertir a mapa genético utilizando la tasa de recombinación correspondiente
-  genMap_temp <- genMap_temp * recombination_rate_test[i]
-
-  # Guardar en la lista
-  genMap[[i]] <- genMap_temp
-
-  # Importar matriz de haplotipos
-  data <- scan(paste0(getOption("almond.input_dir", ".."), "/Haplotypes/Chr_", i, "_gmatrix.txt"))
-  chr_temp <- matrix(data, ncol = 60, byrow = TRUE)
-  chr_temp <- t(chr_temp)
-
-  # Guardar en la lista de haplotipos
-  haplotypes[[i]] <- chr_temp
+# Sample distinct diploid founders once; preserve their adjacent haplotype
+# pairs and their identities across all eight chromosomes.
+haplotype_dir <- getOption('almond.haplotype_dir')
+founder_count <- as.integer(getOption('almond.founder_count'))
+first_line <- readLines(file.path(haplotype_dir,'Chr_1_gmatrix.txt'),n=1L)
+bank_columns <- length(strsplit(trimws(first_line),'[[:space:]]+')[[1]])
+stopifnot(bank_columns%%2L==0L,bank_columns/2L>=founder_count)
+founder_indices <- sample.int(bank_columns/2L,founder_count,replace=FALSE)
+founder_columns <- as.vector(rbind(2L*founder_indices-1L,2L*founder_indices))
+for(i in 1:8) {
+  positions <- scan(file.path(haplotype_dir,paste0('Chr_',i,'_position.txt')),quiet=TRUE)
+  genMap[[i]] <- positions*recombination_rate_test[i]
+  matrix_file <- file.path(haplotype_dir,paste0('Chr_',i,'_gmatrix.txt'))
+  first <- readLines(matrix_file,n=1L)
+  stopifnot(length(strsplit(trimws(first),'[[:space:]]+')[[1]])==bank_columns)
+  selected <- data.table::fread(matrix_file,header=FALSE,select=founder_columns,
+                              colClasses='integer',showProgress=FALSE,
+                              nThread=as.integer(getOption('almond.nThreads',4L)))
+  stopifnot(nrow(selected)==length(positions),ncol(selected)==2L*founder_count)
+  haplotypes[[i]] <- t(as.matrix(selected))
 }
+rm(selected)
 
 # Ahora genMap y haplotypes contienen los datos de los cromosomas 1 a 8
 
@@ -126,10 +129,10 @@ new_slocihaplos <- slocihaplos
 for (id in unique_ids) {
   # Find rows corresponding to the current ID (e.g., "1_1", "1_2")
   rows_for_id <- which(ids == id)
-
+  
   # Randomly select two different rows from possible_haplotypes
   selected_haplotypes <- possible_haplotypes[sample(1:nrow(possible_haplotypes), 2, replace = FALSE), ]
-
+  
   # Assign the selected haplotypes to the corresponding rows in new_slocihaplos
   new_slocihaplos[rows_for_id[1], ] <- as.numeric(selected_haplotypes[1, ])
   new_slocihaplos[rows_for_id[2], ] <- as.numeric(selected_haplotypes[2, ])

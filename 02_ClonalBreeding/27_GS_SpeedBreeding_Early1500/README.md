@@ -1,0 +1,17 @@
+# Hypothetical almond speed breeding
+
+Two experimental scenarios based on GS early selection: 20 crosses × 75 offspring = 1,500 seedlings, with genomic selection retaining 500. Both allow pollen from age 2; seed parents must be at least age 4. These are chronological ages, not years of phenotyping.
+
+At age 2, candidates are in Juvenile2 and have no fruit phenotype. They are selected by GEBV using the existing training population. Their fruit phenotype remains missing at ages 2–3; the first observation is collected at age 4 (HPT1, h² = 0.2). Later phenotyping and the rest of the pipeline retain the existing settings. Juvenile parents are excluded from phenotype-based genomic training.
+
+27_GS_SpeedBreeding_Early1500: 32 parents, exactly 8 new age-2 parents annually, retaining the 24 highest-GEBV current parents. Twenty pairs are sampled uniformly, with replacement, from directed pairs passing both age and S-compatibility constraints. Contributions are therefore random and may be unequal.
+
+28_GS_SpeedBreeding_Early1500_OCS: at most 32 contributing parents; replacement is determined by OCS. optiSel calculates maternal and pollen contributions separately, each totaling half the genetic contribution. A mature tree may occur in both roles with a shared genotype and kinship; juvenile trees can only occur in the pollen role. lpSolve assigns compatible pairs using a bipartite minimum-cost transportation problem. Integer role counts yield integer transportation solutions, verified explicitly, without expensive integer branch-and-bound. If rounded contributions cannot be used, optiSel is rerun with reduced role caps; if more than 32 trees are used, it reruns within a documented 32-parent shortlist; if rounding violates the kinship limit, it tightens the continuous bound. Alpha interpolates between two feasible integer mating plans. If gain optimization fails, it uses the validated diversity endpoint and records the fallback and solver attempts; failure to construct a feasible diversity endpoint stops the run. This constrained recovery is not a globally optimal cardinality-constrained OCS solver. Alpha defaults to 0.25 and can be changed in settings.R; endpoints incorporate the age-specific roles and differ from the historical heuristic, so calibration and comparisons must use the new implementation consistently.
+
+Both require different individuals in each pair and preserve the existing gametophytic S-compatibility transmission filter. Age-2 × age-2 and age-3 × age-3 are forbidden. Age-4 mother × age-2 pollen donor is permitted when S-compatible; the reverse direction is forbidden. The youngest possible mean age of the two parents is 3 years, not 2.
+
+Results record mean mother and pollen-donor ages, contribution from age-2 donors and donors younger than 4, weighted parental age, parental renewal, accuracy, gain and variance. Cross traces preserve the ages of every offspring's parents and the directed pair IDs.
+
+Run 00RUNME.R explicitly to execute that folder's scenario. Four sequential replicates and 40 future years use saved paired burn-ins from run_20261005_202329_6f1453a95184. Results are written to almondsim_data/redesigned_runs outside Git. No simulation is launched by preparing or installing these files.
+
+Validation at preparation: age/S constraint tests and launcher parsing. The four-replicate experiment is in progress; final multi-year validation is pending.
