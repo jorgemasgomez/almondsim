@@ -130,6 +130,18 @@ A failed scenario is recorded separately while other scenarios continue. Coverag
 
 Report the actual number of complete paired replicates, preserve failed-run diagnostics and distinguish simulation uncertainty from missing coverage. Selection accuracy is evaluated against simulated genetic values for assessment, not supplied as a response to prediction models.
 
+## Manuscript figures
+
+The plotting workflow produces four main horizontal triptychs (selection method,
+generation interval, selection intensity and OCS), a separate supplementary
+renewal panel, and a vertical final-year boxplot grid. The overview contains
+18 main-text schemes; renewal variants are supplementary and exploratory GS4 OCS
+is excluded. Method-family colours are consistent across trajectory panels;
+endpoint colours identify the four Methods blocks.
+
+See [PLOTTING.md](02_ClonalBreeding/PLOTTING.md) for scheme abbreviations,
+paired-replicate rules, provisional previews and 400 dpi PNG/vector PDF export.
+
 ## Repository layout
 
 ```text
