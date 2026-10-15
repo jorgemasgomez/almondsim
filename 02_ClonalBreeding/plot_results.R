@@ -3,7 +3,7 @@
 plot_experiment <- function(run,with_intervals=TRUE) {
  if(!requireNamespace('ggplot2',quietly=TRUE)) stop('Plotting requires ggplot2.')
  config <- readRDS(file.path(run,'configuration.rds'))
- if(!config$config$design_version %in% c('PT_AT_ET_first_use_v2','PT_AT_ET_matched_cohorts_rrblup_v3','PT_AT_ET_annual_matched_PT_v4','PT_AT_ET_decision_specific_PT_v5','PT_AT_ET_Y9_repeated_calibrated_v6','PT_AT_ET_optiSel_profiles_v7','PT_AT_ET_optiSel_cap10_v8')) stop('Use the historical plotter for old simulation runs.')
+ if(!config$config$design_version %in% c('PT_AT_ET_first_use_v2','PT_AT_ET_matched_cohorts_rrblup_v3','PT_AT_ET_annual_matched_PT_v4','PT_AT_ET_decision_specific_PT_v5','PT_AT_ET_Y9_repeated_calibrated_v6','PT_AT_ET_optiSel_profiles_v7','PT_AT_ET_optiSel_cap10_v8','PT_AT_ET_optiSel_native_offspring_v9')) stop('Use the historical plotter for old simulation runs.')
  out <- file.path(run,if(with_intervals) 'plots' else 'plots_lines')
  dir.create(out,recursive=TRUE,showWarnings=FALSE)
  frames <- list();coverage <- list()

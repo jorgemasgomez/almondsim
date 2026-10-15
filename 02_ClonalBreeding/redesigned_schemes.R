@@ -3,11 +3,11 @@
 library(AlphaSimR)
 
 redesign_config <- function() {
- list(design_version='PT_AT_ET_optiSel_cap10_v8',reps=10L,workers=4L,threads=6L,
+ list(design_version='PT_AT_ET_optiSel_native_offspring_v9',reps=10L,workers=4L,threads=6L,
   seed=20261005L,asreml_workspace='16gb',burnin=40L,future=40L,fill_cycles=14L,
   parents=32L,crosses=20L,progeny=25L,act=25L,ect=8L,entrants=8L,
   training_cohorts=3L,gs_solver='AlphaSimR::RRBLUP',early_selection=FALSE,seedlings_keep=500L,
-  ocs_alpha=NA_real_,ocs_max_contribution=.10,ocs_restarts=4L,ocs_sweeps=12L,ocs_backend='optiSel_contributions_and_matings',
+  ocs_alpha=NA_real_,ocs_max_contribution=.10,ocs_family_sizes='variable',ocs_max_parents=NA_integer_,ocs_backend='optiSel_native_offspring',
   speed_breeding=FALSE,minimum_mother_age=4L,minimum_pollen_age=4L,
   data_dir=Sys.getenv('ALMONDSIM_DATA_DIR',unset=''),founder_source='bank150',
   founder_bank=Sys.getenv('ALMONDSIM_FOUNDER_BANK',unset=
@@ -35,7 +35,11 @@ redesign_scenarios <- function(root=NULL) {
    early_selection=early,progeny_per_cross=if(early) 75L else 25L,
    seedlings_keep=500L,new_parents_per_year=if(is.na(alpha)) as.integer(32*renewal/100) else NA_integer_,
    renewal_percent=if(is.na(alpha)) renewal else NA_real_,ocs_alpha=alpha,
-   ocs_profile=profile,ocs_backend=if(is.na(alpha)) NA_character_ else 'optiSel_contributions_and_matings',
+   ocs_profile=profile,ocs_backend=if(is.na(alpha)) NA_character_ else 'optiSel_native_offspring',
+   family_size_policy=if(is.na(alpha)) 'equal' else 'variable',
+   target_offspring=if(early) 1500L else 500L,
+   ocs_max_contribution=if(is.na(alpha)) NA_real_ else .10,
+   ocs_max_parents=NA_integer_,
    speed_breeding=speed,scenario_id=stem,stringsAsFactors=FALSE)
  }
  rows <- list()
@@ -368,7 +372,7 @@ redesign_record <- function(state,scenario,rep,accuracy,entrants,parent_stage) {
 
 redesign_year <- function(state,method,first_parental_use,rep,record=TRUE,renew=TRUE) {
  config <- state$config
- if(!identical(config$design_version,'PT_AT_ET_optiSel_profiles_v7')) stop('Historical burn-in is incompatible with the revised calendar.')
+ if(!identical(config$design_version,'PT_AT_ET_optiSel_native_offspring_v9')) stop('Historical burn-in is incompatible with the revised calendar.')
  first <- as.integer(first_parental_use)
  if(!first %in% c(9L,6L,4L,2L) || (method=='Pheno' && first<6L)) stop('Unsupported parental-use scheme.')
  state$training_stage <- config$training_stage[[as.character(first)]]
@@ -413,7 +417,8 @@ redesign_year <- function(state,method,first_parental_use,rep,record=TRUE,renew=
  } else {
   state$speed_ocs_solver <- ocs_solution$solver_details
   state$pop$F1 <- randCrossGamSI(list(SIPos=locuscompt_position_vector,random_failure=FALSE),
-    state$parents,nCrosses=config$crosses,nProgeny=config$progeny,cross_plan=ocs_solution$cross_ids)
+    state$parents,nCrosses=NA_integer_,nProgeny=config$progeny,
+    cross_plan=ocs_solution$cross_ids,family_sizes=ocs_solution$family_sizes)
   realized <- table(factor(c(state$pop$F1@mother,state$pop$F1@father),levels=state$parents@id))/(2*nInd(state$pop$F1))
   expected <- ocs_solution$contributions$contribution[match(names(realized),ocs_solution$contributions$id)]
   if(anyNA(expected)||max(abs(as.numeric(realized)-expected))>1e-10) stop('Realized OCS contributions differ from the validated plan.')
@@ -468,7 +473,11 @@ redesign_year <- function(state,method,first_parental_use,rep,record=TRUE,renew=
  row$trainingCohorts <- if(method=='Pheno') NA_integer_ else min(state$config$training_cohorts,length(state$stage_history[[state$training_cohort_stage]]))
  row$trainingIndividuals <- if(method=='Pheno') NA_integer_ else nInd(redesign_training(state,candidates))
  row$earlySelection <- isTRUE(config$early_selection)
- row$progenyPerCross <- config$progeny;row$seedlingsBeforeSelection <- seedlings_before
+ row$progenyPerCross <- if(is.null(ocs_solution)) config$progeny else NA_integer_
+ row$variableFamilySizes <- !is.null(ocs_solution)
+ row$numberOfParentalPairs <- if(is.null(state$speed_cross_trace)) NA_integer_ else state$speed_cross_trace$distinct_pair_count
+ row$maxContributingParents <- if(is.na(config$ocs_alpha)) config$parents else NA_integer_
+ row$seedlingsBeforeSelection <- seedlings_before
  row$seedlingsAfterSelection <- nInd(state$pop$Seedlings)
  row$targetNewParents <- if(is.na(config$ocs_alpha)) config$entrants else NA_integer_
  row$targetRenewalPercent <- if(is.na(config$ocs_alpha)) 100*config$entrants/config$parents else NA_real_
@@ -482,13 +491,15 @@ redesign_year <- function(state,method,first_parental_use,rep,record=TRUE,renew=
  row$weightedParentalAge <- (row$meanMotherAge+row$meanFatherAge)/2
  row$pollenFromAge2 <- mean(trace$father_ages==2L)
  row$pollenFromUnder4 <- mean(trace$father_ages<4L)
- row$ocsAlpha <- config$ocs_alpha;row$ocsImplementation <- if(is.na(config$ocs_alpha)) NA_character_ else 'optiSel_contributions_and_matings'
+ row$ocsAlpha <- config$ocs_alpha;row$ocsImplementation <- if(is.na(config$ocs_alpha)) NA_character_ else 'optiSel_native_offspring'
  row$ocsBound <- if(is.null(ocs_solution)) NA_real_ else ocs_solution$bound
  row$ocsGenomicCoancestry <- if(is.null(ocs_solution)) NA_real_ else ocs_solution$metrics$kinship
  row$ocsMateCoancestry <- if(is.null(ocs_solution)) NA_real_ else ocs_solution$metrics$mate_kinship
  row$ocsExpectedBV <- if(is.null(ocs_solution)) NA_real_ else ocs_solution$metrics$gain
  row$ocsEffectiveParents <- if(is.null(ocs_solution)) NA_real_ else 1/sum(ocs_solution$metrics$contribution^2)
  row$ocsBoundSatisfied <- if(is.null(ocs_solution)) NA else ocs_solution$metrics$kinship<=ocs_solution$bound+1e-8
+ row$ocsCoancestryExcess <- if(is.null(ocs_solution)) NA_real_ else max(0,ocs_solution$metrics$kinship-ocs_solution$bound)
+ row$ocsCoancestryExcessRelative <- if(is.null(ocs_solution)) NA_real_ else ocs_solution$solver_details$optimization_audit$rounded_kinship_excess_relative
  row$ocsEndpointsCollapsed <- if(is.null(ocs_solution)) NA else abs(ocs_solution$maxK-ocs_solution$minK)<1e-10
  row$ocsFallbackToDiversity <- FALSE
  row$designVersion <- config$design_version
@@ -670,7 +681,7 @@ redesign_worker <- function(job) {
      source(file.path(job$root,'compatible_crosses.R'),local=.GlobalEnv)
      load(base_file,envir=.GlobalEnv)
      state<-get('state',.GlobalEnv)
-     if(!identical(state$config$design_version,job$config$design_version) && !(state$config$design_version %in% c('PT_AT_ET_annual_matched_PT_v4','PT_AT_ET_decision_specific_PT_v5') && job$config$design_version %in% c('PT_AT_ET_decision_specific_PT_v5','PT_AT_ET_optiSel_profiles_v7'))) stop('Historical burn-in cannot be reused with the revised calendar.')
+     if(!identical(state$config$design_version,job$config$design_version) && !(state$config$design_version %in% c('PT_AT_ET_annual_matched_PT_v4','PT_AT_ET_decision_specific_PT_v5','PT_AT_ET_optiSel_profiles_v7','PT_AT_ET_optiSel_cap10_v8') && job$config$design_version=='PT_AT_ET_optiSel_native_offspring_v9')) stop('Historical burn-in cannot be reused with the revised calendar.')
      if(is.null(state$stage_history)) stop('Burn-in lacks stage-specific training archives.')
      SP$nThreads<-job$config$threads
      assign('.Random.seed',parallel::nextRNGStream(job$seed),envir=.GlobalEnv)
@@ -686,8 +697,11 @@ redesign_worker <- function(job) {
      state$config$minimum_pollen_age<-if(state$config$speed_breeding) 2L else 4L
      state$config$minimum_mother_age<-4L
      state$config$first_parental_use<-years
-     state$config$ocs_backend<-'optiSel_contributions_and_matings'
-     if(!identical(state$config$design_version,job$config$design_version) && !(state$config$design_version %in% c('PT_AT_ET_annual_matched_PT_v4','PT_AT_ET_decision_specific_PT_v5') && job$config$design_version %in% c('PT_AT_ET_decision_specific_PT_v5','PT_AT_ET_optiSel_profiles_v7'))) stop('Burn-in design version differs. Generate a new burn-in for matched-cohort training.')
+     state$config$ocs_backend<-'optiSel_native_offspring'
+     state$config$ocs_max_contribution<-job$config$ocs_max_contribution
+     state$config$ocs_family_sizes<-job$config$ocs_family_sizes
+     state$config$ocs_max_parents<-NA_integer_
+     if(!identical(state$config$design_version,job$config$design_version) && !(state$config$design_version %in% c('PT_AT_ET_annual_matched_PT_v4','PT_AT_ET_decision_specific_PT_v5','PT_AT_ET_optiSel_profiles_v7','PT_AT_ET_optiSel_cap10_v8') && job$config$design_version=='PT_AT_ET_optiSel_native_offspring_v9')) stop('Burn-in design version differs. Generate a new burn-in for matched-cohort training.')
      state$config$training_stage<-job$config$training_stage
      state$config$training_cohort_stage<-job$config$training_cohort_stage
      state$config$gs_solver<-job$config$gs_solver

@@ -15,3 +15,7 @@ Pheno/GS use four workers with six threads; pedigree runs sequentially in one wo
 ASReml workspace 16gb. A failed scenario stops only that scenario in that replicate.
 Other scenarios and replicates continue. Plot coverage explicitly excludes incomplete
 trajectories. Historical code is backed up outside this source tree during migration.
+
+Current source design: PT_AT_ET_optiSel_native_offspring_v9. OCS uses native offspring
+allocation with variable family sizes, no upper limit on parent/pair count, and a
+10% combined contribution cap. Frozen earlier experiments are not modified.

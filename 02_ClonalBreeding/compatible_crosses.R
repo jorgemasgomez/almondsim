@@ -1,6 +1,6 @@
 # Mother/father pairs remain fixed while incompatible pollen is rejected.
-# Each crossing event produces its full, equal-sized family or fails explicitly.
-randCrossGamSI <- function(prms,pop,nCrosses=NA,nProgeny,cross_plan=NA) {
+# Each pair produces its explicitly allocated family size or fails explicitly.
+randCrossGamSI <- function(prms,pop,nCrosses=NA,nProgeny,cross_plan=NA,family_sizes=NULL) {
  state <- getOption('almond.cross_state')
  allowed <- ocs_compatibility(pop,prms$SIPos,self_compatible_allele)
  if(!is.null(state)) {
@@ -21,11 +21,16 @@ randCrossGamSI <- function(prms,pop,nCrosses=NA,nProgeny,cross_plan=NA) {
   if(ncol(plan)!=2L||anyNA(plan)||any(plan<1L)||any(plan>nInd(pop))||!all(allowed[plan])) stop('Invalid S-locus or age-constrained crossing plan.')
   if(!is.na(nCrosses)&&nrow(plan)!=nCrosses) stop('Crossing plan does not match the budget.')
  }
+ if(is.null(family_sizes)) family_sizes<-rep(nProgeny,nrow(plan))
+ if(length(family_sizes)!=nrow(plan)||anyNA(family_sizes)||any(!is.finite(family_sizes))||
+    any(family_sizes<1)||any(family_sizes!=floor(family_sizes)))
+   stop('Each parental pair needs a positive integer offspring count.')
+ family_sizes<-as.integer(family_sizes)
  maternal1 <- pullMarkerHaplo(pop,markers=prms$SIPos,haplo=1,simParam=SP)
  maternal2 <- pullMarkerHaplo(pop,markers=prms$SIPos,haplo=2,simParam=SP)
  self <- as.numeric(self_compatible_allele)
  families <- lapply(seq_len(nrow(plan)),function(i) {
-  kept <- list();remaining <- as.integer(nProgeny)
+  kept <- list();remaining <- family_sizes[i]
   for(attempt in seq_len(100L)) {
    if(!remaining) break
    # Never resample parents during rejection: realized contributions stay fixed.
@@ -43,13 +48,13 @@ randCrossGamSI <- function(prms,pop,nCrosses=NA,nProgeny,cross_plan=NA) {
   if(remaining) stop('Compatible family incomplete after 100 attempts: ',
     as.character(pop@id[plan[i,1]]),' x ',as.character(pop@id[plan[i,2]]))
   family <- mergePops(kept)
-  stopifnot(nInd(family)==nProgeny,all(family@mother==pop@id[plan[i,1]]),all(family@father==pop@id[plan[i,2]]))
+  stopifnot(nInd(family)==family_sizes[i],all(family@mother==pop@id[plan[i,1]]),all(family@father==pop@id[plan[i,2]]))
   family
  })
  result <- mergePops(families)
  if(!is.null(state)) state$speed_cross_trace <- list(
   mother_ages=state$year-state$birth[as.character(result@mother)],
   father_ages=state$year-state$birth[as.character(result@father)],
-  cross_ids=matrix(as.character(pop@id[plan]),ncol=2),cross_count=nrow(plan))
+  cross_ids=matrix(as.character(pop@id[plan]),ncol=2),cross_count=nrow(plan),distinct_pair_count=nrow(unique(plan)),family_sizes=family_sizes,total_offspring=sum(family_sizes))
  result
 }

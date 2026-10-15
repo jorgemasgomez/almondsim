@@ -18,7 +18,7 @@ The default experiment comprises 14 initialization cycles, a 40-year burn-in and
 
 ![Overview of manuscript breeding schemes grouped by selection accuracy, generation interval, selection intensity and optimal contribution selection.](docs/figures/almond_all_schemes_corrected.png)
 
-*Figure 2. Organization of the manuscript comparisons. Scheme numbers denote the year of first parental use. Early selection reduces 1,500 seedlings to 500. In speed breeding, pollen can be used from year 2, while maternal use starts in year 4. OCS allows unequal contributions from at most 32 parents. The diagram summarizes the breeding pipeline; detailed model and contribution constraints are documented below.*
+*Figure 2. Organization of the manuscript comparisons. Scheme numbers denote the year of first parental use. Early selection reduces 1,500 seedlings to 500. In speed breeding, pollen can be used from year 2, while maternal use starts in year 4. The original OCS panel predates the v9 update: its ≤32-parent annotation is superseded by unrestricted parent numbers, variable family sizes and a 10% individual contribution cap. The original diagram is retained for provenance; current OCS constraints are documented below.*
 
 | Comparison | Strategies |
 | --- | --- |
@@ -43,17 +43,19 @@ Genotype-by-year responses are simulated. Prediction models account for record y
 
 ### Optimal contribution selection
 
-The OCS workflow combines:
+The current `v9` workflow uses three native optiSel functions:
 
-1. Continuous contribution optimization with `optiSel::opticont`.
-2. Integer rounding, feasibility repair and gain-aware local refinement.
-3. Mating allocation with `optiSel::matings`, using a custom linear-programming solver hook to enforce forbidden crosses.
+1. `optiSel::opticont` optimizes continuous genetic contributions.
+2. `optiSel::noffspring` converts them to integer offspring counts using its own deterministic rounding.
+3. `optiSel::matings` assigns those counts to parental pairs, minimizing offspring-weighted pair coancestry.
 
-The three profiles use **alpha = 0.10, 0.20 and 0.40** for Diversity, Balanced and Gain, respectively. Alpha interpolates the coancestry bound between feasible endpoints; it is a parameter of this implementation, rather than a native optiSel option. Profile names describe the intended emphasis and do not guarantee the same realized trade-off across breeding strategies.
+The profiles use **alpha = 0.10, 0.20 and 0.40** for Diversity, Balanced and Gain. Alpha interpolates the coancestry bound between native continuous minimum-coancestry and maximum-merit endpoints. It is our bound-setting parameter, not the unrelated `alpha` argument of `matings`. Profile names do not guarantee a fixed amount of retained genetic variance.
 
-The current `v8` design enforces 20 crosses, at most 32 contributing parents, S-compatibility, no selfing, role-specific minimum ages and a **maximum combined contribution of 10% per individual**. With equal offspring numbers per cross, this cap permits at most four of the 40 parental participations per individual. Genomic coancestry uses allele frequencies fixed in the replicate's founder parental population.
+All OCS schemes produce **1,500 offspring in variable-size families**, followed by early selection of 500. There is **no limit of 20 parental pairs or 32 contributing trees** in OCS. Each tree's combined maternal and paternal genetic contribution is limited to **10%**. Genomic coancestry uses allele frequencies fixed in the replicate's founder parental population.
 
-Endpoint search and discrete contribution refinement are heuristic. Final mating allocation is optimal conditional on the fixed parental role counts; this is not a guarantee of a globally optimal discrete OCS solution. Historical experiments retain their own frozen code and constraints and should not be pooled with revised designs without checking provenance.
+A restriction adapter for `matings` enforces S-compatibility, no selfing and role-specific ages through the solver interface. Native optiSel linear constraints enforce the combined-tree cap when a tree has both roles. There is **no custom contribution rounding, repair or local refinement**, and no pre-fit rounding allowance. Final contributions, offspring totals and coancestry are checked explicitly. Native rounding can slightly exceed the continuous coancestry target: those departures generate a warning and are recorded in absolute and relative terms while native counts are retained. Individual-cap violations or biologically infeasible pairing still fail explicitly. The code does not alter native contributions to force a result.
+
+The update changes OCS allocation and its endpoint definitions. Historical v7/v8 experiments retain their frozen code and must not be relabelled as v9. The baseline and non-OCS schemes keep their original crossing budgets and parental replacement rules. See [the OCS workflow](02_ClonalBreeding/MANUAL_OCS.md) for implementation details.
 
 ## Requirements
 

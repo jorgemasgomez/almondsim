@@ -1,6 +1,4 @@
-# Genomic coancestry, compatibility, metrics and capped local refinement;
-# no claim of a globally optimal cardinality-constrained solution.
-# Equal family sizes give each parental appearance contribution 1/(2*nCrosses).
+# Genomic coancestry, biological compatibility and offspring-weighted metrics.
 
 ocs_fixed_frequency <- function(pop) {
   geno <- pullSnpGeno(pop,simParam=SP)
@@ -36,49 +34,14 @@ ocs_compatibility <- function(pop,markers,self_compatible=NULL) {
   allowed
 }
 
-ocs_metrics <- function(plan,K,bv) {
-  counts <- tabulate(as.integer(plan),nbins=nrow(K))
-  contribution <- counts/length(plan)
-  active <- which(counts>0)
-  list(kinship=as.numeric(crossprod(contribution[active],K[active,active,drop=FALSE]%*%contribution[active])),
-       gain=sum(contribution*bv),parents=length(active),counts=counts,
-       contribution=contribution,mate_kinship=mean(K[plan]))
+# Weights are offspring numbers for variable-size families, or one per event.
+ocs_metrics <- function(plan,K,bv,weights=rep(1,nrow(plan))) {
+ stopifnot(ncol(plan)==2L,length(weights)==nrow(plan),!anyNA(plan),
+   all(is.finite(weights)),all(weights>0))
+ counts<-numeric(nrow(K))
+ for(j in seq_len(nrow(plan)))counts[plan[j,]]<-counts[plan[j,]]+weights[j]
+ contribution<-counts/(2*sum(weights));active<-which(counts>0)
+ list(kinship=as.numeric(crossprod(contribution[active],K[active,active,drop=FALSE]%*%contribution[active])),
+   gain=sum(contribution*bv),parents=length(active),counts=counts,contribution=contribution,
+   mate_kinship=sum(weights*K[plan])/sum(weights))
 }
-
-ocs_improve <- function(plan,K,bv,allowed,max_parents,mode,bound=Inf,sweeps=12L) {
-  n <- nrow(K);slots <- length(plan);crosses <- nrow(plan)
-  counts <- tabulate(plan,nbins=n)
-  for(sweep in seq_len(sweeps)) {
-    changes <- 0L
-    for(slot in sample.int(slots)) {
-      row <- (slot-1L)%%crosses+1L;column <- (slot-1L)%/%crosses+1L
-      old <- plan[row,column];mate <- plan[row,3L-column]
-      counts[old] <- counts[old]-1L
-      active <- which(counts>0)
-      options <- which(if(column==1L) allowed[,mate] else allowed[mate,])
-      options <- options[counts[options]<ocs_cap_slots(slots/2)]
-      if(length(active)>=max_parents) options <- options[counts[options]>0L]
-      if(!length(options)) stop('OCS lost a feasible parental assignment.')
-      weight <- counts[active]/slots
-      Kc <- as.numeric(K[,active,drop=FALSE]%*%weight)
-      base <- sum(weight*Kc[active])
-      kinship <- base+2*Kc[options]/slots+diag(K)[options]/slots^2
-      if(mode=='gain') {
-        feasible <- kinship<=bound+1e-10
-        options <- options[feasible];kinship <- kinship[feasible]
-        if(!length(options)) stop('OCS repair failed to preserve the realized bound.')
-        order <- order(-bv[options],kinship,K[options,mate],options)
-      } else {
-        order <- order(kinship,-bv[options],K[options,mate],options)
-      }
-      chosen <- options[order[1L]]
-      plan[row,column] <- chosen
-      counts[chosen] <- counts[chosen]+1L
-      if(chosen!=old) changes <- changes+1L
-    }
-    if(changes==0L) break
-  }
-  plan
-}
-
-# Capped endpoint construction is defined in ocs_cap10_support.R.
