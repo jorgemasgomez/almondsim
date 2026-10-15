@@ -1,45 +1,161 @@
-# Almond breeding simulations with AlphaSimR
+# AlmondSim
 
-## Introduction
+**Stochastic simulation of almond breeding programs with AlphaSimR.**
 
-This repository contains AlmondSim scripts for almond breeding-program simulations using AlphaSimR. The clonal breeding framework was adapted from Bancic et al. (2025), *Plant breeding simulations with AlphaSimR*, Crop Science 65, e21312: https://doi.org/10.1002/csc2.21312. The original generic feature examples and wheat vignette have been removed from this almond-specific repository.
+AlmondSim evaluates how selection method, generation interval, selection intensity and optimal contribution selection affect long-term genetic gain, prediction accuracy and genetic diversity in almond breeding. It represents overlapping generations, annual environmental variation, successive field evaluation stages and biological restrictions on crossing.
 
-If you use this material, please cite the above publication and the original AlphaSimR publication:
+The clonal breeding framework was adapted from [Bančič et al. (2025)](https://doi.org/10.1002/csc2.21312). The current implementation provides an almond-specific scenario catalogue, decision-specific prediction models and an optiSel-based contribution and mating allocation workflow.
 
-    @article{Gaynor2021AlphaSimR,
-      author = {Gaynor, R. Chris and Gorjanc, Gregor and Hickey, John M.},
-      title = {{AlphaSimR}: An {R}-package for Breeding Program Simulations},
-      volume = {11},
-      year = {2021},
-      doi = {10.1093/g3journal/jkaa017},
-      journal = {G3: Genes|Genomes|Genetics}
-    }
+## Breeding framework
 
+![Baseline almond breeding program: crossing, juvenility, preliminary trials, advanced trials, elite trials and annual parental replacement.](docs/figures/almond_baseline_corrected.png)
 
+*Figure 1. Baseline breeding program. Each annual cycle produces 500 offspring from 20 crosses. Preliminary trials (PT), advanced trials (AT) and elite trials (ET) occur in years 4–5, 6–8 and 9–11, respectively. Selection reduces each cohort from 500 to 25 and then to eight individuals. In the baseline scheme, the annual pool contains eight new and 24 retained parents. The displayed heritabilities are targets for aggregate stage evaluations in the reference population.*
 
-See [current experiment and external data storage](02_ClonalBreeding/STORAGE.md).
+The default experiment comprises 14 initialization cycles, a 40-year burn-in and 40 future years. Scenarios within a replicate share a burn-in population and an annual environmental calendar, supporting paired comparisons. Genetic gain is measured relative to each replicate's own burn-in population.
 
-## Current manuscript design
+## Breeding strategies
 
-The active catalogue contains 24 schemes with first parental use in years 9, 6, 4 or 2.
-The manuscript comparison excludes the three exploratory GS4 OCS schemes (21 schemes).
-See [the scenario catalogue](02_ClonalBreeding/SCHEMES.md) and
-[external storage](02_ClonalBreeding/STORAGE.md). OCS uses optiSel contributions and mating
-allocation with custom integer refinement, exact biological constraints and a maximum
-combined genetic contribution of 10% per individual in new v8 runs.
-Historical simulations belong to the previous design and are preserved externally.
-The ongoing v7 experiment retains its frozen uncapped code. Updating this repository
-does not start a simulation. Pending OCS in that experiment were cancelled by the user;
-new capped OCS runs require a later explicit launch.
+![Overview of manuscript breeding schemes grouped by selection accuracy, generation interval, selection intensity and optimal contribution selection.](docs/figures/almond_all_schemes_corrected.png)
 
-## Source layout
+*Figure 2. Organization of the manuscript comparisons. Scheme numbers denote the year of first parental use. Early selection reduces 1,500 seedlings to 500. In speed breeding, pollen can be used from year 2, while maternal use starts in year 4. OCS allows unequal contributions from at most 32 parents. The diagram summarizes the breeding pipeline; detailed model and contribution constraints are documented below.*
 
-- `02_ClonalBreeding/main.R`: explicit entry point for a fresh complete catalogue run.
-- `02_ClonalBreeding/00_Burn_in`: common trait/founder settings and standalone burn-in entry point.
-- Numbered scenario folders: settings and explicit per-scenario launchers.
-- `02_ClonalBreeding/redesigned_schemes.R`: annual simulation and decision-specific prediction models.
-- `ocs_discrete.R`, `ocs_optisel.R`, `ocs_optisel_roles.R`, `ocs_cap10_support.R` and the compatibility adapter: active OCS backend.
-- `plot_results.R`, `pedigree_representation.R` and `parallel_replicates.R`: plotting, pedigree export and parallel execution helpers.
-- `tests/check_ocs_cap10.R`: small allocation checks; no breeding generations.
+| Comparison | Strategies |
+| --- | --- |
+| Selection accuracy | Phenotypic selection, pedigree BLUP and genomic selection with first parental use in year 9 |
+| Generation interval | First parental use in years 9, 6, 4 or 2, where supported by the selection method; GS–6 parental renewal of 25%, 50%, 75% or 100% |
+| Selection intensity | Standard cohorts of 500 versus early selection of 500 from 1,500 seedlings |
+| Optimal contribution selection | GS–6 and speed breeding GS–2 with Diversity, Balanced and Gain profiles |
 
-Generated results and retired local files remain outside Git. Source updates do not resume or launch any experiment.
+The repository contains **24 schemes**. The manuscript set contains **21 schemes**, excluding the three exploratory GS–4 OCS schemes. The full list, identifiers and prediction rules are in [SCHEMES.md](02_ClonalBreeding/SCHEMES.md).
+
+### Prediction models
+
+- **Phenotypic selection** ranks candidates using their available aggregate phenotypes.
+- **Pedigree prediction** uses additive BLUP in ASReml-R, with pedigree relationships and record year as a fixed effect.
+- **Genomic prediction** uses SNP-based ridge-regression BLUP in AlphaSimR, accounting for record year.
+
+Training populations follow the decision being made. PT selection uses the current completed PT cohort and its two predecessors. AT selection uses the original PT records of the current completed AT cohort and its two predecessors, retaining candidates' own records. Each training window contains 1,500 individuals.
+
+For GS–9 and Pedigree–9, AT selection and parental recruitment additionally use 75 AT observations from the same individuals: **1,575 observations on 1,500 individuals**. PT and AT records retain their own observation years and share an individual genetic effect. Both methods use the same calibrated relative error covariance structure; its scale is estimated within each fit. GS uses `AlphaSimR::solveRRBLUP` after whitening, and pedigree prediction uses ASReml-R. Other genomic models use `AlphaSimR::RRBLUP`.
+
+Genotype-by-year responses are simulated. Prediction models account for record year as a fixed effect; they do not fit a separate genotype-by-year interaction. Older retained parents' own records are not appended beyond the defined training window. See [SCHEMES.md](02_ClonalBreeding/SCHEMES.md) for the full assumptions.
+
+### Optimal contribution selection
+
+The OCS workflow combines:
+
+1. Continuous contribution optimization with `optiSel::opticont`.
+2. Integer rounding, feasibility repair and gain-aware local refinement.
+3. Mating allocation with `optiSel::matings`, using a custom linear-programming solver hook to enforce forbidden crosses.
+
+The three profiles use **alpha = 0.10, 0.20 and 0.40** for Diversity, Balanced and Gain, respectively. Alpha interpolates the coancestry bound between feasible endpoints; it is a parameter of this implementation, rather than a native optiSel option. Profile names describe the intended emphasis and do not guarantee the same realized trade-off across breeding strategies.
+
+The current `v8` design enforces 20 crosses, at most 32 contributing parents, S-compatibility, no selfing, role-specific minimum ages and a **maximum combined contribution of 10% per individual**. With equal offspring numbers per cross, this cap permits at most four of the 40 parental participations per individual. Genomic coancestry uses allele frequencies fixed in the replicate's founder parental population.
+
+Endpoint search and discrete contribution refinement are heuristic. Final mating allocation is optimal conditional on the fixed parental role counts; this is not a guarantee of a globally optimal discrete OCS solution. Historical experiments retain their own frozen code and constraints and should not be pooled with revised designs without checking provenance.
+
+## Requirements
+
+The validated development environment uses R 4.4.1, AlphaSimR 2.1.0 and optiSel 2.1.0. Pedigree schemes require **ASReml-R 4.2 and an available licence**. ASReml-R is installed separately from its licensed distribution.
+
+Install the public R dependencies:
+
+```r
+install.packages(c(
+  "AlphaSimR", "optiSel", "lpSolve", "jsonlite", "data.table", "ggplot2"
+))
+```
+
+Founder generation is a separate preprocessing step. The simulator imports a prepared almond haplotype bank; large founder inputs and generated simulation data are not included in this repository.
+
+### Founder inputs and output storage
+
+Set these paths before launching an experiment:
+
+| Variable | Purpose |
+| --- | --- |
+| `ALMONDSIM_FOUNDER_BANK` | Prepared founder-bank directory, or its parent containing bank runs |
+| `ALMONDSIM_DATA_DIR` | External directory for experiment snapshots, logs, results and plots |
+
+The founder bank must match the expected format: a completed manifest, 150 diploid individuals, eight chromosomes, mutation rate `1e-8`, and chromosome-specific position and genotype files (`Chr_1_position.txt`, `Chr_1_gmatrix.txt`, through chromosome 8).
+
+**Outputs must remain outside the source repository.** See [STORAGE.md](02_ClonalBreeding/STORAGE.md) for storage conventions and execution details.
+
+## Running an experiment
+
+Run the following from the repository root after installing the dependencies and preparing founder inputs. Calling `run_redesigned_schemes()` starts a new experiment; sourcing the engine only defines its functions.
+
+```r
+Sys.setenv(
+  ALMONDSIM_FOUNDER_BANK = "/path/to/prepared/founder_bank",
+  ALMONDSIM_DATA_DIR = "/path/to/external/almondsim_data"
+)
+
+root <- normalizePath("02_ClonalBreeding", winslash = "/")
+source(file.path(root, "redesigned_schemes.R"))
+
+config <- redesign_config()
+config$reps <- 10L
+config$workers <- 4L
+config$threads <- 6L
+
+scenarios <- redesign_all_scenarios(root)
+
+# Retain the 21 manuscript schemes; omit exploratory GS–4 OCS.
+scenarios <- scenarios[
+  !grepl("^GS_Y4_Early1500_OCS_", scenarios$scenario_id),
+]
+
+run <- run_redesigned_schemes(root, config, scenarios)
+
+source(file.path(root, "plot_results.R"))
+plot_experiment(run$run_dir)
+```
+
+For the full 24-scheme catalogue, omit the filtering step. Alternatively, explicitly running [main.R](02_ClonalBreeding/main.R) launches the full default catalogue, while each numbered scenario folder contains an individual `00RUNME.R` entry point.
+
+Phenotypic and genomic schemes run in parallel. Pedigree schemes are processed afterwards in a sequential ASReml worker. Worker and thread counts should be adjusted to available resources and licence constraints.
+
+## Results and reproducibility
+
+Each experiment stores its configuration, source snapshot, progress information, scenario status, diagnostics, annual results and plots in its external run directory. Prediction and OCS audits support checks of training populations, solver diagnostics, contributions and biological constraints.
+
+A failed scenario is recorded separately while other scenarios continue. Coverage must be checked before reporting a comparison. At ten replicates and 40 future years, complete coverage corresponds to:
+
+- **8,400 annual rows** for the 21 manuscript schemes.
+- **9,600 annual rows** for the full 24-scheme catalogue.
+
+Report the actual number of complete paired replicates, preserve failed-run diagnostics and distinguish simulation uncertainty from missing coverage. Selection accuracy is evaluated against simulated genetic values for assessment, not supplied as a response to prediction models.
+
+## Repository layout
+
+```text
+almondsim/
+├── README.md
+├── LICENSE
+├── docs/figures/                 # Breeding-program diagrams
+└── 02_ClonalBreeding/
+    ├── main.R                   # Full-catalogue entry point
+    ├── 00_Burn_in/              # Founder and trait settings
+    ├── 01_Pheno_Y9/ ...         # Numbered scenario settings and launchers
+    ├── redesigned_schemes.R     # Annual engine and prediction models
+    ├── ocs_*.R                 # Contribution and mating allocation backend
+    ├── plot_results.R          # Plotting utilities
+    ├── tests/                  # Focused implementation checks
+    ├── SCHEMES.md              # Scenario definitions and model assumptions
+    └── STORAGE.md              # Inputs, external storage and execution
+```
+
+## References and attribution
+
+Please cite the methods and software used in your analysis:
+
+- Bančič et al. (2025). *Plant breeding simulations with AlphaSimR*. Crop Science, 65, e21312. [doi:10.1002/csc2.21312](https://doi.org/10.1002/csc2.21312).
+- Gaynor, Gorjanc and Hickey (2021). *AlphaSimR: an R package for breeding program simulations*. G3, 11, jkaa017. [doi:10.1093/g3journal/jkaa017](https://doi.org/10.1093/g3journal/jkaa017).
+- Wellmann (2019). *optiSel: optimum contribution selection and population genetics*. BMC Bioinformatics, 20, 25. [doi:10.1186/s12859-018-2450-5](https://doi.org/10.1186/s12859-018-2450-5).
+- Adrion et al. (2020). *A community-maintained standard library of population genetic models*. eLife, 9, e54967. [doi:10.7554/eLife.54967](https://doi.org/10.7554/eLife.54967). Relevant to founder generation using stdpopsim.
+
+## Licence
+
+The source code is distributed under the [MIT licence](LICENSE). Original framework authorship and copyright notices are retained.

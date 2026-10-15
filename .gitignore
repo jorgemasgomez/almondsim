@@ -70,3 +70,6 @@ vignettes/*.pdf
 **/error*.txt
 **/Chr_*_gmatrix.txt
 **/Chr_*_position.txt
+
+!docs/figures/almond_baseline_corrected.png
+!docs/figures/almond_all_schemes_corrected.png
