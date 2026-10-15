@@ -65,7 +65,7 @@ manuscript_read_results <- function(run) {
   coverage=do.call(rbind,coverage),catalogue=catalogue)
 }
 
-manuscript_metric_labels <- function()c('Genetic gain','Genetic diversity\n(genetic variance)','Selection accuracy')
+manuscript_metric_labels <- function()c('Genetic gain','Genetic variance','Selection accuracy')
 
 manuscript_summary <- function(data) {
  keys<-unique(data[c('scenario','future_year')]);rows<-list()
@@ -132,20 +132,14 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
    ggplot2::scale_color_manual(values=colors,breaks=b$ids,labels=labs,drop=FALSE)+
    ggplot2::scale_fill_manual(values=colors,breaks=b$ids,labels=labs,drop=FALSE)+
    ggplot2::scale_x_continuous(limits=c(1,input$config$config$future),breaks=c(1,10,20,30,40))+
-   ggplot2::labs(title=b$title,subtitle=subtitle,x='Future year',y=NULL,color=NULL,fill=NULL,
-    caption=paste(if(paired)'Shared complete replicates within each panel.'else 'Complete replicates per scheme; sample sizes may differ.',
-     if(preview)'Unavailable arms excluded from preview pairing.'else '',
-     if(with_intervals)'Shading: pointwise 95% Monte Carlo intervals where n >= 2.'else 'Solid lines: replicate means.',
-     if(any(grepl('Pheno',b$ids)))'PH seedling prediction accuracy is not defined.'else '',
-     if(b$name=='04_optimal_contribution_selection'&&historical_ocs)'HISTORICAL OCS: frozen earlier allocation; not the new native-offspring design.'else ''))+
+   ggplot2::labs(title=NULL,subtitle=NULL,caption=NULL,x='Future year',y=NULL,color=NULL,fill=NULL)+
    ggplot2::theme_bw(base_size=13)+ggplot2::theme(
-    plot.title=ggplot2::element_text(face='bold',size=17),
-    plot.subtitle=ggplot2::element_text(color='#61666B',size=10),
+    plot.title=ggplot2::element_blank(),plot.subtitle=ggplot2::element_blank(),
     strip.background=ggplot2::element_rect(fill='#F1F4F6',color='#CED5DB'),
     strip.text=ggplot2::element_text(face='bold',size=12),
     legend.position='bottom',legend.text=ggplot2::element_text(size=10),
     panel.grid.minor=ggplot2::element_blank(),panel.spacing=grid::unit(1.1,'lines'),
-    plot.caption=ggplot2::element_text(hjust=0,size=9),plot.margin=ggplot2::margin(12,16,12,12))+
+    plot.caption=ggplot2::element_blank(),plot.margin=ggplot2::margin(10,16,10,12))+
    ggplot2::guides(color=ggplot2::guide_legend(nrow=if(length(b$ids)>6)2 else 1,byrow=TRUE),
      fill=ggplot2::guide_legend(nrow=if(length(b$ids)>6)2 else 1,byrow=TRUE))
   manuscript_save(p,file.path(out,b$name),18,6,dpi)
@@ -190,25 +184,23 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
   ggplot2::scale_x_continuous(breaks=seq_len(nrow(paper)),labels=paper$label,limits=c(.5,nrow(paper)+.5),expand=c(0,0))+
   ggplot2::scale_fill_manual(values=blockcolors,drop=FALSE)+ggplot2::scale_color_manual(values=blockcolors,guide='none')+
   ggplot2::coord_cartesian(clip='off')+
-  ggplot2::labs(title=paste0('Final-year performance | year ',input$config$config$burnin+input$config$config$future),
-   subtitle=subtitle,x=NULL,y=NULL,fill=NULL,
-   caption=paste('One point per complete replicate; n shown for each metric. Boxes summarize available replicates per scheme.',
-    '\nPH: phenotypic; PED: pedigree; GS: genomic; SB: speed breeding; E: early1500; OD/OB/OG: OCS Diversity/Balanced/Gain.',
-    '\nPH prediction accuracy: NA. Renewal variants are supplementary and excluded.',
-    if(historical_ocs)'OCS values shown here belong to the historical frozen design.'else ''))+
+  ggplot2::labs(title=NULL,subtitle=NULL,caption=NULL,x=NULL,y=NULL,fill=NULL)+
   ggplot2::theme_bw(base_size=12)+ggplot2::theme(
-   plot.title=ggplot2::element_text(size=17,face='bold'),plot.subtitle=ggplot2::element_text(size=10,color='#61666B',margin=ggplot2::margin(b=18)),
+   plot.title=ggplot2::element_blank(),plot.subtitle=ggplot2::element_blank(),
    axis.text.x=ggplot2::element_text(angle=45,hjust=1,size=10,color='#263238'),
    strip.placement='outside',strip.background=ggplot2::element_blank(),
    strip.text.y.left=ggplot2::element_text(angle=90,face='bold',size=11),
    panel.grid.major.x=ggplot2::element_blank(),panel.grid.minor=ggplot2::element_blank(),
    panel.spacing=grid::unit(1.8,'lines'),legend.position='none',
-   plot.caption=ggplot2::element_text(hjust=0,size=9),plot.margin=ggplot2::margin(22,18,12,12))
+   plot.caption=ggplot2::element_blank(),plot.margin=ggplot2::margin(22,18,10,12))
  manuscript_save(q,file.path(out,'05_final_year_boxplots'),18,12.5,dpi)
  write.csv(final_long,file.path(out,'final_year_values.csv'),row.names=FALSE)
  write.csv(counts,file.path(out,'final_year_counts.csv'),row.names=FALSE)
  saveRDS(q,file.path(out,'final_year_boxplot.rds'))
- writeLines(c('Four main horizontal triptychs, one supplementary renewal triptych, one vertical endpoint grid.',
+ writeLines(c(paste('Data status:',subtitle),
+  paste('Historical OCS:',historical_ocs),
+  'No overall titles, subtitles or explanatory captions are printed inside figures.',
+  'Four main horizontal triptychs, one supplementary renewal triptych, one vertical endpoint grid.',
   'Trajectory metric order: gain, genetic variance, prediction accuracy. Solid lines only.',
   'Trajectory colours identify method families (Pheno orange, pedigree purple, GS blue).',
   'Endpoint colours identify Methods blocks, in manuscript order. No renewal or GS4 OCS in endpoint grid.',

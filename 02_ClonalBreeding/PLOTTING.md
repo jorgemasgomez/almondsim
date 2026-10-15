@@ -7,7 +7,7 @@ it through the existing `plot_experiment()` entry point for future runs.
 ## Layout and scope
 
 Each trajectory figure is a horizontal triptych: **genetic gain**, **genetic
-diversity (seedling genetic variance)**, **selection accuracy**. Lines are solid.
+variance (measured in seedlings)**, **selection accuracy**. Lines are solid.
 Optional pointwise 95% Monte Carlo intervals require at least two replicates.
 
 1. **Selection method:** PH9, PED9, GS9.
@@ -64,3 +64,11 @@ The run's recorded design identifier is respected. Historical OCS results carry
 an explicit historical-design note and are never relabelled as native-offspring
 OCS. Data from different runs or design versions are not combined.
 Existing frozen simulation code is not modified by changing this plot module.
+
+## Publication styling
+
+Figures have no overall title, subtitle or explanatory footnote. Metric labels
+are Genetic gain, Genetic variance and Selection accuracy. Axis labels, scheme
+legends, Methods-block labels and sample sizes remain. Caption information,
+provisional coverage and historical-design provenance are stored externally in
+the exported README and CSV files rather than printed on the image.
