@@ -72,3 +72,13 @@ are Genetic gain, Genetic variance and Selection accuracy. Axis labels, scheme
 legends, Methods-block labels and sample sizes remain. Caption information,
 provisional coverage and historical-design provenance are stored externally in
 the exported README and CSV files rather than printed on the image.
+
+## Legend columns
+
+Trajectory legends read down each column. Selection-method and generation-interval
+panels have separate Pheno, Pedigree and GS columns, with first-use years ordered
+9, 6, 4, 2 where applicable. Empty alignment cells are invisible. Intensity uses
+Pedigree, GS6 and speed-breeding columns, each showing the standard control above
+early selection. OCS has GS6 and speed-breeding columns, each ordered control,
+Diversity, Balanced, Gain. The supplementary renewal legend reads 25%, 50%, 75%,
+100%. No overall figure titles or explanatory footnotes are added.

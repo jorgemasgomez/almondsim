@@ -36,6 +36,28 @@ manuscript_blocks <- function() {
    ids=c('GS_Y6',paste0('GS_Y6_R',c(50,75,100)))))
 }
 
+# Order each legend top-to-bottom within meaningful, aligned columns.
+manuscript_legend <- function(block) {
+ ids<-block$ids
+ if(block$name=='S01_parental_renewal')return(list(order=ids,nrow=1L,padding=character()))
+ if(block$name=='04_optimal_contribution_selection') {
+  groups<-list(GS6=ids[grepl('^GS_Y6',ids)],SB2=ids[grepl('^GS_SpeedBreeding',ids)])
+ }else if(block$name=='03_selection_intensity') {
+  groups<-list(Pedigree=ids[grepl('^Pedigree',ids)],GS6=ids[grepl('^GS_Y6',ids)],
+   SB2=ids[grepl('^GS_SpeedBreeding',ids)])
+ }else {
+  groups<-list(Pheno=ids[grepl('^Pheno',ids)],Pedigree=ids[grepl('^Pedigree',ids)],GS=ids[grepl('^GS',ids)])
+ }
+ groups<-groups[lengths(groups)>0]
+ rows<-max(lengths(groups));order<-character();padding<-character()
+ for(i in seq_along(groups)) {
+  empty<-if(length(groups[[i]])<rows)paste0('.legend_blank_',i,'_',seq_len(rows-length(groups[[i]])))else character()
+  order<-c(order,groups[[i]],empty);padding<-c(padding,empty)
+ }
+ stopifnot(setequal(setdiff(order,padding),ids))
+ list(order=order,nrow=rows,padding=padding)
+}
+
 manuscript_read_results <- function(run) {
  cfg<-readRDS(file.path(run,'configuration.rds'))
  frames<-list();coverage<-list();catalogue<-manuscript_catalogue()
@@ -117,6 +139,9 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
   labs<-setNames(paste0(cat$label[match(b$ids,cat$scenario)],' (n=',counts,')'),b$ids)
   if(b$name=='S01_parental_renewal')labs['GS_Y6']<-paste0('GS6-R25 (n=',counts['GS_Y6'],')')
   colors<-setNames(cat$color[match(b$ids,cat$scenario)],b$ids)
+  legend<-manuscript_legend(b)
+  colors<-c(colors,setNames(rep('transparent',length(legend$padding)),legend$padding))
+  labs<-c(labs,setNames(rep('',length(legend$padding)),legend$padding))
   if(nrow(selected))summary<-manuscript_summary(selected)else summary<-data.frame(
    scenario=character(),year=numeric(),metric=character(),value=numeric(),lower=numeric(),upper=numeric(),n=integer())
   summary$scenario<-factor(summary$scenario,levels=b$ids)
@@ -129,8 +154,8 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
   if(with_intervals)p<-p+ggplot2::geom_ribbon(ggplot2::aes(ymin=lower,ymax=upper),alpha=.10,color=NA,na.rm=TRUE)
   p<-p+ggplot2::geom_line(linewidth=.9,na.rm=TRUE,show.legend=TRUE)+
    ggplot2::facet_wrap(~metric,nrow=1,scales='free_y',drop=FALSE)+
-   ggplot2::scale_color_manual(values=colors,breaks=b$ids,labels=labs,drop=FALSE)+
-   ggplot2::scale_fill_manual(values=colors,breaks=b$ids,labels=labs,drop=FALSE)+
+   ggplot2::scale_color_manual(values=colors,limits=legend$order,breaks=legend$order,labels=labs,drop=FALSE)+
+   ggplot2::scale_fill_manual(values=colors,limits=legend$order,breaks=legend$order,labels=labs,drop=FALSE)+
    ggplot2::scale_x_continuous(limits=c(1,input$config$config$future),breaks=c(1,10,20,30,40))+
    ggplot2::labs(title=NULL,subtitle=NULL,caption=NULL,x='Future year',y=NULL,color=NULL,fill=NULL)+
    ggplot2::theme_bw(base_size=13)+ggplot2::theme(
@@ -140,8 +165,8 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
     legend.position='bottom',legend.text=ggplot2::element_text(size=10),
     panel.grid.minor=ggplot2::element_blank(),panel.spacing=grid::unit(1.1,'lines'),
     plot.caption=ggplot2::element_blank(),plot.margin=ggplot2::margin(10,16,10,12))+
-   ggplot2::guides(color=ggplot2::guide_legend(nrow=if(length(b$ids)>6)2 else 1,byrow=TRUE),
-     fill=ggplot2::guide_legend(nrow=if(length(b$ids)>6)2 else 1,byrow=TRUE))
+   ggplot2::guides(color=ggplot2::guide_legend(nrow=legend$nrow,byrow=FALSE),
+     fill=ggplot2::guide_legend(nrow=legend$nrow,byrow=FALSE))
   manuscript_save(p,file.path(out,b$name),18,6,dpi)
   summaries[[b$name]]<-summary
  }
