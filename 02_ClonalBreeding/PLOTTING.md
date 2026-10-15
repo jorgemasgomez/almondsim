@@ -6,8 +6,7 @@ it through the existing `plot_experiment()` entry point for future runs.
 
 ## Layout and scope
 
-Each trajectory figure is a horizontal triptych: **genetic gain**, **genetic
-variance (measured in seedlings)**, **selection accuracy**. Lines are solid.
+Each trajectory figure is a horizontal triptych: **selection accuracy**, **genetic gain**, **genetic variance**. Lines are solid.
 Optional pointwise 95% Monte Carlo intervals require at least two replicates.
 
 1. **Selection method:** PH9, PED9, GS9.
@@ -18,8 +17,8 @@ Optional pointwise 95% Monte Carlo intervals require at least two replicates.
    and Gain (.40). Exploratory GS4 OCS is excluded.
 5. **Supplement S01:** GS6 renewal 25%, 50%, 75% and 100%. These variants are
    kept out of the main trajectory panels and the final-year overview.
-6. **Final-year overview:** a vertical stack of three boxplots, in the same metric
-   order, with all 18 main-text schemes. Methods blocks determine order and fill:
+6. **Final-year overview:** a vertical stack of two boxplots, genetic gain above genetic
+   variance, with all 18 main-text schemes. Methods blocks determine order and fill:
    selection accuracy, generation interval, selection intensity, OCS.
 
 Trajectory colours are fixed by method family: Pheno orange, pedigree purple,
@@ -38,7 +37,7 @@ plot_manuscript("/path/to/run", with_intervals = FALSE)
 
 The default output directory is `run/manuscript_figures/with_CI` or `lines`.
 PNG files are 400 dpi; PDF files retain vector plot elements. Trajectory figures
-are 18 x 6 inches; the endpoint grid is 18 x 12.5 inches. Outputs stay outside Git.
+are 18 x 6 inches; the endpoint grid is 18 x 9 inches. Outputs stay outside Git.
 
 For an explicitly provisional example while the experiment is running:
 
@@ -82,3 +81,12 @@ Pedigree, GS6 and speed-breeding columns, each showing the standard control abov
 early selection. OCS has GS6 and speed-breeding columns, each ordered control,
 Diversity, Balanced, Gain. The supplementary renewal legend reads 25%, 50%, 75%,
 100%. No overall figure titles or explanatory footnotes are added.
+
+## OCS palette and endpoint metrics
+
+The OCS trajectory panel uses blues for GS6 and turquoises for speed breeding,
+while preserving control, Diversity, Balanced and Gain order in both columns.
+Other trajectory panels retain the method-family palette. Actual panel colours
+are exported in panel_color_key.csv. All trajectory panels read selection accuracy,
+genetic gain, genetic variance from left to right. The endpoint grid contains only
+genetic gain and genetic variance; prediction accuracy is omitted from that grid.

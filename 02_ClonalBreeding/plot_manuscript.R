@@ -87,14 +87,14 @@ manuscript_read_results <- function(run) {
   coverage=do.call(rbind,coverage),catalogue=catalogue)
 }
 
-manuscript_metric_labels <- function()c('Genetic gain','Genetic variance','Selection accuracy')
+manuscript_metric_labels <- function()c('Selection accuracy','Genetic gain','Genetic variance')
 
 manuscript_summary <- function(data) {
  keys<-unique(data[c('scenario','future_year')]);rows<-list()
  for(i in seq_len(nrow(keys))) {
   z<-data[data$scenario==keys$scenario[i]&data$future_year==keys$future_year[i],,drop=FALSE]
-  for(j in seq_along(c('gain','variance','accSel'))) {
-   v<-z[[c('gain','variance','accSel')[j]]];v<-v[is.finite(v)];n<-length(v)
+  for(j in seq_along(c('accSel','gain','variance'))) {
+   v<-z[[c('accSel','gain','variance')[j]]];v<-v[is.finite(v)];n<-length(v)
    value<-if(n)mean(v)else NA_real_
    half<-if(n>1L)qt(.975,n-1L)*sd(v)/sqrt(n)else NA_real_
    rows[[length(rows)+1L]]<-data.frame(scenario=keys$scenario[i],year=keys$future_year[i],
@@ -123,7 +123,7 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
  version<-input$config$config$design_version
  historical_ocs<-!identical(version,'PT_AT_ET_optiSel_native_offspring_v9')
  subtitle<-if(preview||!all_complete)'PROVISIONAL | complete trajectories only; unavailable schemes remain explicit'else 'Complete trajectories'
- summaries<-list();panel_coverage<-list()
+ summaries<-list();panel_coverage<-list();palette_key<-list()
  for(b in manuscript_blocks()) {
   selected<-input$data[input$data$scenario%in%b$ids,,drop=FALSE]
   available<-b$ids[b$ids%in%unique(selected$scenario)]
@@ -139,6 +139,14 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
   labs<-setNames(paste0(cat$label[match(b$ids,cat$scenario)],' (n=',counts,')'),b$ids)
   if(b$name=='S01_parental_renewal')labs['GS_Y6']<-paste0('GS6-R25 (n=',counts['GS_Y6'],')')
   colors<-setNames(cat$color[match(b$ids,cat$scenario)],b$ids)
+  if(b$name=='04_optimal_contribution_selection') {
+   # Separate GS6 and speed breeding by hue in this OCS-only comparison.
+   colors[c('GS_Y6_Early1500',paste0('GS_Y6_Early1500_OCS_',c('Diversity','Balanced','Gain')))]<-
+    c('#123F72','#172E6B','#356CC0','#7BA5D8')
+   colors[c('GS_SpeedBreeding_Y2_Early1500',paste0('GS_SpeedBreeding_Y2_Early1500_OCS_',c('Diversity','Balanced','Gain')))]<-
+    c('#00574F','#168979','#40B6A5','#86D5C6')
+  }
+  palette_key[[b$name]]<-data.frame(panel=b$name,scenario=b$ids,color=unname(colors[b$ids]))
   legend<-manuscript_legend(b)
   colors<-c(colors,setNames(rep('transparent',length(legend$padding)),legend$padding))
   labs<-c(labs,setNames(rep('',length(legend$padding)),legend$padding))
@@ -170,6 +178,7 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
   manuscript_save(p,file.path(out,b$name),18,6,dpi)
   summaries[[b$name]]<-summary
  }
+ write.csv(do.call(rbind,palette_key),file.path(out,'panel_color_key.csv'),row.names=FALSE)
  write.csv(do.call(rbind,panel_coverage),file.path(out,'panel_coverage.csv'),row.names=FALSE)
  saveRDS(summaries,file.path(out,'trajectory_summaries.rds'))
  saveRDS(input$data,file.path(out,'complete_trajectory_data.rds'))
@@ -178,26 +187,26 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
  # Renewal and exploratory GS4 OCS are excluded. Each point is one replicate.
  paper<-cat[cat$paper,,drop=FALSE]
  final<-input$data[input$data$future_year==input$config$config$future&input$data$scenario%in%paper$scenario,,drop=FALSE]
- rows<-lapply(seq_along(c('gain','variance','accSel')),function(j) {
-  z<-final[c('rep','scenario')];z$value<-final[[c('gain','variance','accSel')[j]]]
-  z$metric<-manuscript_metric_labels()[j];z
+ endpoint_labels<-c('Genetic gain','Genetic variance')
+ rows<-lapply(seq_along(c('gain','variance')),function(j) {
+  z<-final[c('rep','scenario')];z$value<-final[[c('gain','variance')[j]]]
+  z$metric<-endpoint_labels[j];z
  })
  final_long<-do.call(rbind,rows);final_long$scenario<-factor(final_long$scenario,levels=paper$scenario)
- final_long$metric<-factor(final_long$metric,levels=manuscript_metric_labels())
+ final_long$metric<-factor(final_long$metric,levels=endpoint_labels)
  final_long$block<-paper$block[match(final_long$scenario,paper$scenario)]
  final_long$x<-match(final_long$scenario,paper$scenario)
  blockcolors<-c('Selection accuracy'='#287DAD','Generation interval'='#556BA0',
    'Selection intensity'='#B16E20','Optimal contribution selection'='#2F8069')
  bands<-data.frame(block=names(blockcolors),xmin=c(.5,3.5,9.5,12.5),xmax=c(3.5,9.5,12.5,18.5))
- counts<-expand.grid(scenario=paper$scenario,metric=manuscript_metric_labels(),stringsAsFactors=FALSE)
+ counts<-expand.grid(scenario=paper$scenario,metric=endpoint_labels,stringsAsFactors=FALSE)
  counts$n<-mapply(function(id,m)sum(final_long$scenario==id&as.character(final_long$metric)==m&is.finite(final_long$value)),counts$scenario,counts$metric)
  counts$label<-ifelse(counts$n==0,'n=0',paste0('n=',counts$n))
- counts$label[counts$scenario%in%c('Pheno_Y9','Pheno_Y6')&counts$metric==manuscript_metric_labels()[3]]<-'NA'
  counts$x<-match(counts$scenario,paper$scenario)
- counts$metric<-factor(counts$metric,levels=manuscript_metric_labels())
+ counts$metric<-factor(counts$metric,levels=endpoint_labels)
  finite<-final_long[is.finite(final_long$value),,drop=FALSE]
  headers<-bands;headers$x<-(headers$xmin+headers$xmax)/2
- headers$metric<-factor(manuscript_metric_labels()[1],levels=manuscript_metric_labels())
+ headers$metric<-factor(endpoint_labels[1],levels=endpoint_labels)
  q<-ggplot2::ggplot(finite,ggplot2::aes(x,value,group=scenario,fill=block))+
   ggplot2::geom_rect(data=bands,ggplot2::aes(xmin=xmin,xmax=xmax,ymin=-Inf,ymax=Inf,fill=block),inherit.aes=FALSE,alpha=.055,color=NA)+
   ggplot2::geom_vline(xintercept=c(3.5,9.5,12.5),color='#C9D0D5',linewidth=.4)+
@@ -218,7 +227,7 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
    panel.grid.major.x=ggplot2::element_blank(),panel.grid.minor=ggplot2::element_blank(),
    panel.spacing=grid::unit(1.8,'lines'),legend.position='none',
    plot.caption=ggplot2::element_blank(),plot.margin=ggplot2::margin(22,18,10,12))
- manuscript_save(q,file.path(out,'05_final_year_boxplots'),18,12.5,dpi)
+ manuscript_save(q,file.path(out,'05_final_year_boxplots'),18,9,dpi)
  write.csv(final_long,file.path(out,'final_year_values.csv'),row.names=FALSE)
  write.csv(counts,file.path(out,'final_year_counts.csv'),row.names=FALSE)
  saveRDS(q,file.path(out,'final_year_boxplot.rds'))
@@ -226,11 +235,11 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
   paste('Historical OCS:',historical_ocs),
   'No overall titles, subtitles or explanatory captions are printed inside figures.',
   'Four main horizontal triptychs, one supplementary renewal triptych, one vertical endpoint grid.',
-  'Trajectory metric order: gain, genetic variance, prediction accuracy. Solid lines only.',
-  'Trajectory colours identify method families (Pheno orange, pedigree purple, GS blue).',
+  'Trajectory metric order: selection accuracy, genetic gain, genetic variance. Solid lines only.',
+  'Trajectory colours identify method families (Pheno orange, pedigree purple, GS blue); OCS panel separates GS6 blues from speed-breeding turquoises.',
   'Endpoint colours identify Methods blocks, in manuscript order. No renewal or GS4 OCS in endpoint grid.',
   'Paired trajectory means require shared complete replicate IDs; previews omit unavailable arms from pairing.',
-  'Endpoint boxes show available complete replicates per scheme; they are not paired differences.',
+  'Endpoint grid contains genetic gain and genetic variance only. Boxes show complete replicates per scheme, not paired differences.',
   'Gain is relative to the replicate burn-in; variance uses retained seedlings; accuracy is measured before early selection.',
   'Pheno accuracy is NA, not zero. n=0 is missing; n=1 is a single replicate, not an estimate of uncertainty.',
   paste('Source design:',version),'Historical OCS and native-offspring OCS must not be pooled.'),file.path(out,'README.txt'))
