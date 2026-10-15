@@ -18,7 +18,7 @@ The default experiment comprises 14 initialization cycles, a 40-year burn-in and
 
 ![Overview of manuscript breeding schemes grouped by selection accuracy, generation interval, selection intensity and optimal contribution selection.](docs/figures/almond_all_schemes_corrected.png)
 
-*Figure 2. Organization of the manuscript comparisons. Scheme numbers denote the year of first parental use. Early selection reduces 1,500 seedlings to 500. In speed breeding, pollen can be used from year 2, while maternal use starts in year 4. The OCS panel reflects v9: variable family sizes, no fixed parent count and a maximum combined contribution of 10% per tree. The PNG is exported at 7,200 × 7,272 pixels (600 dpi); an [editable vector version](docs/figures/almond_all_schemes_corrected.svg) is also provided.*
+*Figure 2. Organization of the manuscript comparisons. Scheme numbers denote the year of first parental use. Early selection reduces 1,500 seedlings to 500. In speed breeding, pollen can be used from year 2, while maternal use starts in year 4. The OCS panel reflects v9: variable family sizes, no fixed parent count and a maximum combined contribution of 10% per genotype. The PNG is exported at 7,200 × 7,272 pixels (600 dpi); an [editable vector version](docs/figures/almond_all_schemes_corrected.svg) is also provided.*
 
 | Comparison | Strategies |
 | --- | --- |
