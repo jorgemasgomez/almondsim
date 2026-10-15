@@ -73,3 +73,5 @@ vignettes/*.pdf
 
 !docs/figures/almond_baseline_corrected.png
 !docs/figures/almond_all_schemes_corrected.png
+
+!docs/figures/almond_all_schemes_corrected.svg

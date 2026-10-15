@@ -169,9 +169,10 @@ numberOfParentalPairs and maxContributingParents (NA for OCS). progenyPerCross i
 NA when OCS family sizes vary. The first future cohort uses the initial crossing
 plan, before the first OCS decision takes effect, and is recorded accordingly.
 
-The two manuscript diagrams predate v9. The baseline diagram remains valid;
-the all-schemes diagram's OCS <=32 symbol and fixed-family implication are
-superseded by these definitions. Original figure assets are preserved unchanged.
+The baseline diagram remains valid. The all-schemes diagram now shows the v9
+10% per-tree contribution limit, variable family sizes and no fixed parent count.
+Its editable SVG source and 7200 x 7272 PNG are available in docs/figures.
+The preceding figure version is backed up outside the repository.
 
 Updating these sources does not launch any simulation or modify frozen runs.
 Historical v7/v8 results remain separate from v9 and must not be relabelled.
