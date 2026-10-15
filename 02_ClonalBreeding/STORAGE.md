@@ -1,11 +1,17 @@
-# Code and external simulation data
+# Code and external data
 
-The active experiment contains 22 scenarios. Speed breeding scenarios 27 and 28 are standalone experiments. OPR scenarios and scenario 26 were removed from the active design.
+The active catalogue has 24 schemes; the manuscript excludes the three exploratory GS4 OCS schemes (21 schemes). Run `main.R` explicitly for all schemes,
+or `<numbered scenario>/00RUNME.R` for one. Sourcing the engine only defines functions.
+Default: 10 replicates, 40 burn-in years and 40 future years, preceded by 14 fixed-founder
+initialization cycles. Full successful future coverage is 9,600 unique rows for the full catalogue (24 x 10 x 40), or 8,400 rows for the 21 manuscript schemes.
 
-Run `02_ClonalBreeding/main.R` for the full comparison, or a scenario's `00RUNME.R` directly under `02_ClonalBreeding/<scenario>`. Results and burn-in snapshots for new active runs are generated outside this repository in the sibling `almondsim_data/redesigned_runs` directory. Set the environment variable `ALMONDSIM_DATA_DIR` to choose a different external directory. Legacy haplotypes are read from `<data directory>/Haplotypes`.
+New runs are written outside this repository to the sibling
+`almondsim_data/manuscript_runs` directory. `ALMONDSIM_DATA_DIR` changes the external
+data directory; `ALMONDSIM_FOUNDER_BANK` changes the bank150/60000 input directory.
+The data directory must remain outside the source repository. All snapshots, haplotypes,
+logs, results and plots remain external. A run freezes its source in its own `code` folder.
 
-The 150-individual founder bank is an external input; set `config$founder_bank` to its directory. Generation is separate from this repository and the loader requires a complete manifest. No haplotypes, plots, results, burn-in snapshots, logs, or simulation run directories belong in Git.
-
-Historical numbered scenario folders are archived outside the repository in `almondsim_data/archived_code`. The common `00_Burn_in` initialization remains a runtime dependency. Use the active launcher for the redesigned experiment. A pilot that was already running when storage changed retains its original directory until completion; it is excluded from Git.
-
-Existing binary files removed from the current Git tree remain recoverable in earlier commits. This update does not rewrite repository history.
+Pheno/GS use four workers with six threads; pedigree runs sequentially in one worker,
+ASReml workspace 16gb. A failed scenario stops only that scenario in that replicate.
+Other scenarios and replicates continue. Plot coverage explicitly excludes incomplete
+trajectories. Historical code is backed up outside this source tree during migration.

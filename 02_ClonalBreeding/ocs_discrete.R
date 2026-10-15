@@ -1,4 +1,4 @@
-# Genomic OCS on realized integer mating plans. Heuristic local search;
+# Genomic coancestry, compatibility, metrics and capped local refinement;
 # no claim of a globally optimal cardinality-constrained solution.
 # Equal family sizes give each parental appearance contribution 1/(2*nCrosses).
 
@@ -56,6 +56,7 @@ ocs_improve <- function(plan,K,bv,allowed,max_parents,mode,bound=Inf,sweeps=12L)
       counts[old] <- counts[old]-1L
       active <- which(counts>0)
       options <- which(if(column==1L) allowed[,mate] else allowed[mate,])
+      options <- options[counts[options]<ocs_cap_slots(slots/2)]
       if(length(active)>=max_parents) options <- options[counts[options]>0L]
       if(!length(options)) stop('OCS lost a feasible parental assignment.')
       weight <- counts[active]/slots
@@ -80,80 +81,4 @@ ocs_improve <- function(plan,K,bv,allowed,max_parents,mode,bound=Inf,sweeps=12L)
   plan
 }
 
-ocs_endpoints <- function(K,bv,allowed,crosses,max_parents,restarts=4L,sweeps=12L) {
-  pairs <- which(allowed,arr.ind=TRUE)
-  if(!nrow(pairs)) stop('No S-compatible non-self crosses in the OCS candidate pool.')
-  pair_gain <- (bv[pairs[,1]]+bv[pairs[,2]])/2
-  best <- which.max(pair_gain)
-  gain_plan <- matrix(rep(pairs[best,],each=crosses),nrow=crosses,ncol=2)
-  # Repeating a family is permitted in both comparison arms; budget counts
-  # crossing events rather than requiring 20 distinct parental pairs.
-  minimum <- gain_plan
-  bestK <- ocs_metrics(minimum,K,bv)$kinship
-  for(restart in seq_len(restarts)) {
-    pool <- sample.int(nrow(K),min(max_parents,nrow(K)))
-    feasible <- pairs[pairs[,1]%in%pool & pairs[,2]%in%pool,,drop=FALSE]
-    if(!nrow(feasible)) next
-    plan <- feasible[sample.int(nrow(feasible),crosses,replace=TRUE),,drop=FALSE]
-    plan <- ocs_improve(plan,K,bv,allowed,max_parents,'diversity',sweeps=sweeps)
-    score <- ocs_metrics(plan,K,bv)$kinship
-    if(score<bestK) {minimum <- plan;bestK <- score}
-  }
-  list(diversity=minimum,gain=gain_plan,
-       minK=bestK,maxK=ocs_metrics(gain_plan,K,bv)$kinship)
-}
-
-ocs_profile_plan <- function(K,bv,allowed,crosses,max_parents,alpha,
-                             restarts=4L,sweeps=12L,seed=1L) {
-  stopifnot(alpha>=0,alpha<=1,max_parents>=2,crosses>0)
-  # Optimization randomness must not consume the breeding simulation stream.
-  had_seed <- exists('.Random.seed',.GlobalEnv,inherits=FALSE)
-  if(had_seed) saved <- get('.Random.seed',.GlobalEnv)
-  on.exit(if(had_seed) assign('.Random.seed',saved,.GlobalEnv) else
-            if(exists('.Random.seed',.GlobalEnv,inherits=FALSE)) rm('.Random.seed',envir=.GlobalEnv))
-  set.seed(seed)
-  endpoints <- ocs_endpoints(K,bv,allowed,crosses,max_parents,restarts,sweeps)
-  bound <- endpoints$minK+alpha*(endpoints$maxK-endpoints$minK)
-  plan <- endpoints$diversity
-  steps <- sort(unique(c(.05,.25,.6,alpha)))
-  for(step in steps[steps<=alpha]) {
-    step_bound <- endpoints$minK+step*(endpoints$maxK-endpoints$minK)
-    plan <- ocs_improve(plan,K,bv,allowed,max_parents,'gain',step_bound,sweeps)
-  }
-  # Optimize mate allocation while keeping the genetic contributions unchanged.
-  # Swapping fathers preserves every count and therefore the OCS bound exactly.
-  for(pass in 1:3) for(i in seq_len(crosses)) for(j in seq_len(crosses)) {
-    if(i>=j) next
-    a <- plan[i,1];b <- plan[i,2];c <- plan[j,1];d <- plan[j,2]
-    if(allowed[a,d] && allowed[c,b] && K[a,d]+K[c,b]<K[a,b]+K[c,d]-1e-12) {
-      plan[i,2] <- d;plan[j,2] <- b
-    }
-  }
-  metrics <- ocs_metrics(plan,K,bv)
-  stopifnot(nrow(plan)==crosses,metrics$parents<=max_parents,
-            all(allowed[plan]),metrics$kinship<=bound+1e-8)
-  list(plan=plan,metrics=metrics,bound=bound,minK=endpoints$minK,maxK=endpoints$maxK,alpha=alpha)
-}
-
-redesign_ocs <- function(state,candidates,model) {
-  if(is.null(state$ocs_frequency)) stop('Missing fixed founder SNP frequencies for OCS.')
-  pool <- redesign_merge_latest(list(state$parents,candidates))
-  pool <- redesign_predict(pool,'GS',model)
-  K <- ocs_kinship(pool,state$ocs_frequency)
-  allowed <- ocs_compatibility(pool,locuscompt_position_vector,self_compatible_allele)
-  solution <- ocs_profile_plan(K,as.numeric(ebv(pool)),allowed,state$config$crosses,
-                              state$config$parents,state$config$ocs_alpha,
-                              restarts=state$config$ocs_restarts,sweeps=state$config$ocs_sweeps,
-                              seed=state$config$seed+as.integer(state$year))
-  active <- which(solution$metrics$counts>0)
-  selected <- pool[active]
-  old_ids <- state$parents@id
-  solution$new <- sum(!selected@id %in% old_ids)
-  solution$weighted_age <- sum(solution$metrics$contribution*
-                               (state$year-state$birth[as.character(pool@id)]))
-  solution$contributions <- data.frame(id=as.character(pool@id[active]),
-                                       contribution=solution$metrics$contribution[active])
-  solution$cross_ids <- matrix(as.character(pool@id[solution$plan]),ncol=2)
-  solution$parents <- selected
-  solution
-}
+# Capped endpoint construction is defined in ocs_cap10_support.R.

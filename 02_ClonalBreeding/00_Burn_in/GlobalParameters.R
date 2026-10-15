@@ -1,16 +1,16 @@
 # Global Parameters
 
 # ---- Number of simulation replications and breeding cycles ----
-nReps   = 1      # Number of simulation replicates
+nReps = 10 # Independent simulation replicates
 nBurnin = 40     # Number of years in burnin phase
 nFuture = 40 # Number of years in future phase
 startRecords = 35 # Year when training and pedigree record collecting begins
 nCycles = nBurnin + nFuture
 
 # ---- Genome simulation ----
-nChr    = 1      # Number of chromosomes
-nQtl    = 160     # Number of QTL per chromosome: 15 chr x 160 QTL = 2400 QTLs
-nSnp    = 600     # Simulate SNP chip with 9000 markers
+nChr    = 8      # Eight chromosomes imported from the external bank
+nQtl    = 160    # Per chromosome: 1280 QTL across eight chromosomes
+nSnp    = 600    # Per chromosome: 4800 SNP-chip markers across eight chromosomes
 genLen  = 1       # Genetic length
 PhyLen  = 3e+07   # Physical length
 mutRate = 1e-08 # Mutation rate
@@ -23,7 +23,7 @@ initVarGE = 150000  # Genotype-by-year interaction variance
 VarE      = 2800000 # Single variance
 
 # ---- Breeding program details ----
-nParents   = 30   # Number of parents data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAbElEQVR4Xs2RQQrAMAgEfZgf7W9LAguybljJpR3wEse5JOL3ZObDb4x1loDhHbBOFU6i2Ddnw2KNiXcdAXygJlwE8OFVBHDgKrLgSInN4WMe9iXiqIVsTMjH7z/GhNTEibOxQswcYIWYOR/zAjBJfiXh3jZ6AAAAAElFTkSuQmCC(and founders)
+nParents = 32 # Diploid founders sampled per replicate
 nCrosses   = 20  # Number of crosses
 nProgeny   = 25   # Number of progenies per cross
 nClonesACT = 25  # Number of individuals selected at ACT stage
@@ -31,6 +31,6 @@ nClonesECT = 8   # Number of individuals selected at ECT stage
 nClonesECTGS = 13
 random_selfcompatible_parent=sample(1:nParents*2, 1)
 # Effective replication of yield trials
-repHPT     = 1   # h2 = 0.05
-repACT     = 1  # h2 = 0.45
-repECT     = 1  # h2 = 0.65
+repHPT = 1 # PT aggregate h2 = 0.20
+repACT = 1 # AT aggregate h2 = 0.40
+repECT = 1 # ET aggregate h2 = 0.50
