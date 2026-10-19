@@ -18,7 +18,7 @@ The default experiment comprises 14 initialization cycles, a 40-year burn-in and
 
 ![Overview of manuscript breeding schemes grouped by selection accuracy, generation interval, selection intensity and optimal contribution selection.](docs/figures/almond_all_schemes_corrected.png)
 
-*Figure 2. Organization of the manuscript comparisons. Scheme numbers denote the year of first parental use. Early selection reduces 1,500 seedlings to 500. In speed breeding, pollen can be used from year 2, while maternal use starts in year 4. The OCS panel illustrates variable contributions, a maximum contribution of 10% per parent in GS–6 and at least 16 contributing adult parents in speed breeding GS–2. The PNG is exported at 7,200 × 7,272 pixels (600 dpi); an [editable vector version](docs/figures/almond_all_schemes_corrected.svg) and the [reproducible R script](docs/scripts/figure_breeding_schemes_current.R) are also provided.*
+*Figure 2. Organization of the manuscript comparisons. Scheme numbers denote the year of first parental use. Early selection reduces 1,500 seedlings to 500. In speed breeding, pollen can be used from year 2, while maternal use starts in year 4. The OCS panel illustrates variable contributions, a maximum contribution of 10% per parent in GS–6 and at least 16 contributing adult parents in speed breeding GS–2.*
 
 | Comparison | Strategies |
 | --- | --- |
@@ -63,20 +63,14 @@ cap therefore guarantees **at least 16 contributing adults**, also checked after
 rounding and mating. There is no fixed maximum number of contributing parents.
 
 Mutually incompatible self-incompatible S-genotype groups have a combined
-contribution limit of 50%. Sharing only one S allele permits crossing;
-self-compatible carriers are treated separately. Mothers must be at least
+contribution limit of 50%. Sharing only one S allele permits crossing.
+Mothers must be at least
 4 years old; pollen donors must be at least 2 in speed breeding and 4 otherwise.
 Compatibility, no selfing, individual caps and offspring totals remain hard constraints.
 
 Continuous and rounded coancestry excesses up to 10% relative to the bound,
 plus a numerical tolerance of 1e-7, are audited and permitted; larger departures
 fail explicitly. Failed attempts are recorded without automatic retry.
-
-GS–6 uses the validated v11 SI-group implementation; speed breeding adds the
-v12 adult cap. Historical OCS versions remain separate, with implementation and
-source provenance retained per run. Non-OCS models and rules are unchanged.
-See [the current implementation](02_ClonalBreeding/OCS_CURRENT.md) and
-[the OCS workflow](02_ClonalBreeding/MANUAL_OCS.md) for further details.
 
 ## Requirements
 
