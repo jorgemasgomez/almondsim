@@ -18,7 +18,7 @@ The default experiment comprises 14 initialization cycles, a 40-year burn-in and
 
 ![Overview of manuscript breeding schemes grouped by selection accuracy, generation interval, selection intensity and optimal contribution selection.](docs/figures/almond_all_schemes_corrected.png)
 
-*Figure 2. Organization of the manuscript comparisons. Scheme numbers denote the year of first parental use. Early selection reduces 1,500 seedlings to 500. In speed breeding, pollen can be used from year 2, while maternal use starts in year 4. The OCS panel reflects v9: variable family sizes, no fixed parent count and a maximum combined contribution of 10% per genotype. The PNG is exported at 7,200 × 7,272 pixels (600 dpi); an [editable vector version](docs/figures/almond_all_schemes_corrected.svg) is also provided.*
+*Figure 2. Organization of the manuscript comparisons. Scheme numbers denote the year of first parental use. Early selection reduces 1,500 seedlings to 500. In speed breeding, pollen can be used from year 2, while maternal use starts in year 4. The OCS panel illustrates variable contributions, a maximum contribution of 10% per parent in GS–6 and at least 16 contributing adult parents in speed breeding GS–2. The PNG is exported at 7,200 × 7,272 pixels (600 dpi); an [editable vector version](docs/figures/almond_all_schemes_corrected.svg) and the [reproducible R script](docs/scripts/figure_breeding_schemes_current.R) are also provided.*
 
 | Comparison | Strategies |
 | --- | --- |
@@ -43,19 +43,40 @@ Genotype-by-year responses are simulated. Prediction models account for record y
 
 ### Optimal contribution selection
 
-The current `v9` workflow uses three native optiSel functions:
+The current workflow optimizes **one contribution per genotype** with native
+`optiSel::opticont` (`max.BV`, package-default solver), then uses native
+`noffspring` integer allocation. `matings` handles fixed maternal/paternal groups;
+when adult speed-breeding candidates share both roles, a directed integer
+`lpSolve` adapter jointly assigns roles and compatible pairs while preserving
+the native total counts. Contributions are not repaired or refined after optimization.
 
-1. `optiSel::opticont` optimizes continuous genetic contributions.
-2. `optiSel::noffspring` converts them to integer offspring counts using its own deterministic rounding.
-3. `optiSel::matings` assigns those counts to parental pairs, minimizing offspring-weighted pair coancestry.
+Diversity, Balanced and Gain use **Ne-based control parameters 30, 10 and 5**.
+The annual coancestry bound uses standing-parent mean genomic coancestry and
+mean age as a generation-interval proxy. These control parameters are not
+estimates or guarantees of realized effective population size.
 
-The profiles use **alpha = 0.10, 0.20 and 0.40** for Diversity, Balanced and Gain. Alpha interpolates the coancestry bound between native continuous minimum-coancestry and maximum-merit endpoints. It is our bound-setting parameter, not the unrelated `alpha` argument of `matings`. Profile names do not guarantee a fixed amount of retained genetic variance.
+OCS produces **1,500 offspring**, followed by early selection of 500. GS–6
+retains a **10% combined contribution cap per genotype**. In speed breeding,
+adults (age at least 4) have a **3.2% cap**, and younger pollen donors have a
+**10% cap**. Pollen-only candidates jointly contribute at most 50%; the adult
+cap therefore guarantees **at least 16 contributing adults**, also checked after
+rounding and mating. There is no fixed maximum number of contributing parents.
 
-All OCS schemes produce **1,500 offspring in variable-size families**, followed by early selection of 500. There is **no limit of 20 parental pairs or 32 contributing trees** in OCS. Each tree's combined maternal and paternal genetic contribution is limited to **10%**. Genomic coancestry uses allele frequencies fixed in the replicate's founder parental population.
+Mutually incompatible self-incompatible S-genotype groups have a combined
+contribution limit of 50%. Sharing only one S allele permits crossing;
+self-compatible carriers are treated separately. Mothers must be at least
+4 years old; pollen donors must be at least 2 in speed breeding and 4 otherwise.
+Compatibility, no selfing, individual caps and offspring totals remain hard constraints.
 
-A restriction adapter for `matings` enforces S-compatibility, no selfing and role-specific ages through the solver interface. Native optiSel linear constraints enforce the combined-tree cap when a tree has both roles. There is **no custom contribution rounding, repair or local refinement**, and no pre-fit rounding allowance. Final contributions, offspring totals and coancestry are checked explicitly. Native rounding can slightly exceed the continuous coancestry target: those departures generate a warning and are recorded in absolute and relative terms while native counts are retained. Individual-cap violations or biologically infeasible pairing still fail explicitly. The code does not alter native contributions to force a result.
+Continuous and rounded coancestry excesses up to 10% relative to the bound,
+plus a numerical tolerance of 1e-7, are audited and permitted; larger departures
+fail explicitly. Failed attempts are recorded without automatic retry.
 
-The update changes OCS allocation and its endpoint definitions. Historical v7/v8 experiments retain their frozen code and must not be relabelled as v9. The baseline and non-OCS schemes keep their original crossing budgets and parental replacement rules. See [the OCS workflow](02_ClonalBreeding/MANUAL_OCS.md) for implementation details.
+GS–6 uses the validated v11 SI-group implementation; speed breeding adds the
+v12 adult cap. Historical OCS versions remain separate, with implementation and
+source provenance retained per run. Non-OCS models and rules are unchanged.
+See [the current implementation](02_ClonalBreeding/OCS_CURRENT.md) and
+[the OCS workflow](02_ClonalBreeding/MANUAL_OCS.md) for further details.
 
 ## Requirements
 

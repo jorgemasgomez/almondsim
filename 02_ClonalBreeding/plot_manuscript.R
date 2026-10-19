@@ -1,5 +1,5 @@
 # Manuscript figures: horizontal trajectory triptychs and a vertical endpoint grid.
-# Plotting only; no simulation, model fit or OCS allocation is called here.
+# Postprocessing only; endpoint statistical models do not fit breeding predictions or run simulations.
 manuscript_catalogue <- function() {
  ids<-c('Pheno_Y9','Pedigree_Y9','GS_Y9','Pheno_Y6','Pedigree_Y6','GS_Y6',
   'Pedigree_Y4','GS_Y4','GS_SpeedBreeding_Y2',
@@ -104,6 +104,73 @@ manuscript_summary <- function(data) {
  do.call(rbind,rows)
 }
 
+# Endpoint inference: one observation per paired replicate and scheme.
+# Never infer from partial coverage or silently reduce the comparison family.
+manuscript_endpoint_tests <- function(data, ids, expected_reps, out, alpha=.05) {
+ empty<-data.frame()
+ results<-list(letters=empty,pairs=empty,means=empty,diagnostics=empty)
+ status<-list();fits<-list()
+ for(metric in unique(as.character(data$metric))) {
+  z<-data[as.character(data$metric)==metric&is.finite(data$value),c('rep','scenario','value')]
+  z$scenario<-as.character(z$scenario)
+  complete<-!anyDuplicated(z[c('rep','scenario')])&&length(expected_reps)>=3L&&
+   nrow(z)==length(ids)*length(expected_reps)&&
+   all(vapply(ids,function(id)setequal(z$rep[z$scenario==id],expected_reps),logical(1)))
+  if(!complete) {
+   status[[metric]]<-data.frame(metric=metric,status='pending_complete_paired_coverage',
+    detail='Letters require every requested scheme in every planned replicate (minimum three).')
+   next
+  }
+  packages<-c('nlme','emmeans','multcomp','multcompView')
+  missing<-packages[!vapply(packages,requireNamespace,logical(1),quietly=TRUE)]
+  if(length(missing)) {
+   status[[metric]]<-data.frame(metric=metric,status='missing_package',detail=paste(missing,collapse=', '));next
+  }
+  answer<-tryCatch({
+   z$scenario<-factor(z$scenario,levels=ids);z$rep<-factor(z$rep)
+   # Relative scaling improves numerical conditioning without changing inference.
+   scale<-sd(z$value)
+   if(!is.finite(scale)||scale<=0)stop('Endpoint has no variation.')
+   z$response<-z$value/scale
+   fit<-nlme::lme(response~scenario,random=~1|rep,data=z,method='REML',na.action=na.fail)
+   emm<-emmeans::emmeans(fit,~scenario)
+   comparisons<-as.data.frame(emmeans::contrast(emm,method='pairwise',adjust='tukey'))
+   means<-as.data.frame(emmeans::emmeans(fit,~scenario))
+   letters<-as.data.frame(multcomp::cld(emm,alpha=alpha,Letters=base::letters,
+     adjust='tukey',sort=TRUE,reversed=TRUE))
+   # CLD uses Tukey-adjusted pairwise tests; mean confidence intervals are separate.
+   letters$letter<-gsub(' ', '',letters$.group,fixed=TRUE)
+   for(nm in intersect(c('emmean','SE','lower.CL','upper.CL'),names(means)))means[[nm]]<-means[[nm]]*scale
+   for(nm in intersect(c('estimate','SE'),names(comparisons)))comparisons[[nm]]<-comparisons[[nm]]*scale
+   diagnostic<-data.frame(rep=z$rep,scenario=z$scenario,observed=z$value,
+     fitted=as.numeric(fitted(fit))*scale,normalized_residual=as.numeric(residuals(fit,type='normalized')))
+   list(fit=fit,means=means,pairs=comparisons,
+     letters=letters[c('scenario','letter')],diagnostics=diagnostic)
+  },error=function(e)e)
+  if(inherits(answer,'error')) {
+   status[[metric]]<-data.frame(metric=metric,status='analysis_failed',detail=conditionMessage(answer));next
+  }
+  for(key in names(results)) {
+   answer[[key]]$metric<-metric
+   results[[key]]<-rbind(results[[key]],answer[[key]])
+  }
+  fits[[metric]]<-answer$fit
+  status[[metric]]<-data.frame(metric=metric,status='complete',
+   detail='REML random replicate intercept; fixed scheme; global Tukey pairwise tests, alpha=0.05; common residual variance assumed.')
+ }
+ results$status<-do.call(rbind,status)
+ for(key in names(results))write.csv(results[[key]],file.path(out,paste0('endpoint_tests_',key,'.csv')),row.names=FALSE)
+ saveRDS(fits,file.path(out,'endpoint_tests_models.rds'))
+ writeLines(c('Each metric is a separate comparison family including every main-text scheme.',
+  'Model: endpoint ~ scheme + (1 | replicate), REML; Tukey multiplicity correction, alpha=0.05.',
+  'Raw outcome scale; common residual variance and approximately normal conditional errors assumed.',
+  'Review exported residuals and model objects before publication; no automatic assumption test selects the model.',
+  'Shared letters mean no significant difference was detected, not equivalence.',
+  'Boxplots retain all available observations. Letters appear only with full planned paired coverage.'),
+  file.path(out,'endpoint_tests_method.txt'))
+ results
+}
+
 manuscript_save <- function(plot,path,width,height,dpi) {
  ggplot2::ggsave(paste0(path,'.png'),plot,width=width,height=height,dpi=dpi,bg='white',limitsize=FALSE)
  ggplot2::ggsave(paste0(path,'.pdf'),plot,width=width,height=height,device=grDevices::cairo_pdf,bg='white',limitsize=FALSE)
@@ -136,8 +203,8 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
   counts<-setNames(vapply(b$ids,function(id)length(unique(selected$rep[selected$scenario==id])),integer(1)),b$ids)
   panel_coverage[[b$name]]<-data.frame(panel=b$name,scenario=b$ids,n=as.integer(counts),
    paired=paired,preview=preview)
-  labs<-setNames(paste0(cat$label[match(b$ids,cat$scenario)],' (n=',counts,')'),b$ids)
-  if(b$name=='S01_parental_renewal')labs['GS_Y6']<-paste0('GS6-R25 (n=',counts['GS_Y6'],')')
+  labs<-setNames(cat$label[match(b$ids,cat$scenario)],b$ids)
+  if(b$name=='S01_parental_renewal')labs['GS_Y6']<-'GS6-R25'
   colors<-setNames(cat$color[match(b$ids,cat$scenario)],b$ids)
   if(b$name=='04_optimal_contribution_selection') {
    # Separate GS6 and speed breeding by hue in this OCS-only comparison.
@@ -196,6 +263,19 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
  final_long$metric<-factor(final_long$metric,levels=endpoint_labels)
  final_long$block<-paper$block[match(final_long$scenario,paper$scenario)]
  final_long$x<-match(final_long$scenario,paper$scenario)
+ inference<-manuscript_endpoint_tests(final_long,paper$scenario,
+   seq_len(input$config$config$reps),out)
+ annotations<-inference$letters
+ if(nrow(annotations)) {
+  annotations$x<-match(annotations$scenario,paper$scenario)
+  annotations$metric<-factor(annotations$metric,levels=endpoint_labels)
+  annotations$y<-vapply(seq_len(nrow(annotations)),function(i) {
+   values<-final_long$value[final_long$metric==annotations$metric[i]]
+   values<-values[is.finite(values)];span<-max(diff(range(values)),1)
+   max(final_long$value[final_long$scenario==annotations$scenario[i]&
+     final_long$metric==annotations$metric[i]],na.rm=TRUE)+.05*span
+  },numeric(1))
+ }
  blockcolors<-c('Selection accuracy'='#287DAD','Generation interval'='#556BA0',
    'Selection intensity'='#B16E20','Optimal contribution selection'='#2F8069')
  bands<-data.frame(block=names(blockcolors),xmin=c(.5,3.5,9.5,12.5),xmax=c(3.5,9.5,12.5,18.5))
@@ -212,7 +292,6 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
   ggplot2::geom_vline(xintercept=c(3.5,9.5,12.5),color='#C9D0D5',linewidth=.4)+
   ggplot2::geom_boxplot(width=.58,outlier.shape=NA,linewidth=.45,alpha=.85,na.rm=TRUE)+
   ggplot2::geom_point(position=ggplot2::position_jitter(width=.10,height=0,seed=20261015),size=1.4,shape=21,color='#263238',stroke=.25,alpha=.8)+
-  ggplot2::geom_text(data=counts,ggplot2::aes(x=x,y=Inf,label=label),inherit.aes=FALSE,vjust=1.5,size=2.8,color='#626A70')+
   ggplot2::geom_text(data=headers,ggplot2::aes(x=x,y=Inf,label=block,color=block),inherit.aes=FALSE,vjust=-.8,size=3.3,fontface='bold')+
   ggplot2::facet_wrap(~metric,ncol=1,scales='free_y',strip.position='left',drop=FALSE)+
   ggplot2::scale_x_continuous(breaks=seq_len(nrow(paper)),labels=paper$label,limits=c(.5,nrow(paper)+.5),expand=c(0,0))+
@@ -227,6 +306,10 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
    panel.grid.major.x=ggplot2::element_blank(),panel.grid.minor=ggplot2::element_blank(),
    panel.spacing=grid::unit(1.8,'lines'),legend.position='none',
    plot.caption=ggplot2::element_blank(),plot.margin=ggplot2::margin(22,18,10,12))
+ if(nrow(annotations))q<-q+
+  ggplot2::geom_text(data=annotations,ggplot2::aes(x=x,y=y,label=letter),
+    inherit.aes=FALSE,size=3.5,fontface='bold',vjust=0)+
+  ggplot2::scale_y_continuous(expand=ggplot2::expansion(mult=c(.05,.18)))
  manuscript_save(q,file.path(out,'05_final_year_boxplots'),18,9,dpi)
  write.csv(final_long,file.path(out,'final_year_values.csv'),row.names=FALSE)
  write.csv(counts,file.path(out,'final_year_counts.csv'),row.names=FALSE)
@@ -245,3 +328,4 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
   paste('Source design:',version),'Historical OCS and native-offspring OCS must not be pooled.'),file.path(out,'README.txt'))
  invisible(out)
 }
+

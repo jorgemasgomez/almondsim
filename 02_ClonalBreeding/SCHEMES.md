@@ -16,28 +16,18 @@ All nine OCS arms retain 1,500 offspring -> 500 selected seedlings, but allow va
 family sizes and any number of parental pairs and contributing trees. The ordinary
 32-parent pool and fixed replacement rates continue to apply only to non-OCS arms.
 
-OCS uses native optiSel::opticont, optiSel::noffspring(random=FALSE) and
-optiSel::matings. Profiles Diversity=.10, Balanced=.20 and Gain=.40 interpolate
-between continuous minimum-coancestry and maximum-merit endpoints obtained by
-opticont under the same role and combined-tree contribution constraints.
-There is no custom contribution rounding, discrete repair, local refinement,
-shortlist selection, endpoint substitution or pre-fit rounding allowance.
+OCS v10 uses one optimizer variable per genotype, a combined 10% cap and
+Ne-based controls 50/20/5 for Diversity/Balanced/Gain. A single native
+opticont max.BV fit uses the package-default solver. Native noffspring performs
+integer rounding. Fixed role groups use matings; mixed-role speed breeding
+uses a directed integer lpSolve allocation preserving total native counts.
+There is no custom contribution repair or local refinement. Age, compatibility,
+no selfing and cap remain hard constraints; rounded coancestry excess is warned
+and audited. See [MANUAL_OCS.md](MANUAL_OCS.md) for the precise recurrence,
+standing-parent reference and generation-interval proxy. Ne controls are not
+guarantees of realized effective population size.
 
-Each tree's combined maternal+paternal genetic contribution is at most .10.
-Eligible maternal and paternal copies share the same breeding value and genomic
-relationships; native linear constraints link their combined contributions.
-S compatibility, no selfing and role-specific ages are enforced by forbidden-edge
-constraints supplied through matings()'s solver interface. Speed pollen eligibility
-begins at age 2 while maternal eligibility begins at age 4.
-
-Native offspring rounding can slightly exceed the continuous group-coancestry
-target. The native counts are retained; the excess is warned and recorded in
-absolute and relative terms. The combined-tree 10% cap and biological restrictions
-remain hard checks. Infeasible pairing fails explicitly; no private correction
-or automatic retry is used. Final matings
-minimizes offspring-weighted pair coancestry conditional on the rounded margins.
-
-| Folder | First cross year | Own phenotyping campaigns | Early selection | OCS alpha |
+| Folder | First cross year | Own phenotyping campaigns | Early selection | OCS Ne control |
 |---|---:|---:|---|---:|
 | 01_Pheno_Y9 | 9 | 5 | FALSE | NA |
 | 02_Pedigree_Y9 | 9 | 5 | FALSE | NA |
@@ -54,15 +44,15 @@ minimizes offspring-weighted pair coancestry conditional on the rounded margins.
 | 13_GS_Y6_R50 | 6 | 2 | FALSE | NA |
 | 14_GS_Y6_R75 | 6 | 2 | FALSE | NA |
 | 15_GS_Y6_R100 | 6 | 2 | FALSE | NA |
-| 16_GS_Y6_Early1500_OCS_Diversity | 6 | 2 | TRUE | 0.1 |
-| 17_GS_Y6_Early1500_OCS_Balanced | 6 | 2 | TRUE | 0.2 |
-| 18_GS_Y6_Early1500_OCS_Gain | 6 | 2 | TRUE | 0.4 |
-| 19_GS_SpeedBreeding_Y2_Early1500_OCS_Diversity | 2 | 0 | TRUE | 0.1 |
-| 20_GS_SpeedBreeding_Y2_Early1500_OCS_Balanced | 2 | 0 | TRUE | 0.2 |
-| 21_GS_SpeedBreeding_Y2_Early1500_OCS_Gain | 2 | 0 | TRUE | 0.4 |
-| 22_GS_Y4_Early1500_OCS_Diversity | 4 | 0 | TRUE | 0.1 |
-| 23_GS_Y4_Early1500_OCS_Balanced | 4 | 0 | TRUE | 0.2 |
-| 24_GS_Y4_Early1500_OCS_Gain | 4 | 0 | TRUE | 0.4 |
+| 16_GS_Y6_Early1500_OCS_Diversity | 6 | 2 | TRUE | 50 |
+| 17_GS_Y6_Early1500_OCS_Balanced | 6 | 2 | TRUE | 20 |
+| 18_GS_Y6_Early1500_OCS_Gain | 6 | 2 | TRUE | 5 |
+| 19_GS_SpeedBreeding_Y2_Early1500_OCS_Diversity | 2 | 0 | TRUE | 50 |
+| 20_GS_SpeedBreeding_Y2_Early1500_OCS_Balanced | 2 | 0 | TRUE | 20 |
+| 21_GS_SpeedBreeding_Y2_Early1500_OCS_Gain | 2 | 0 | TRUE | 5 |
+| 22_GS_Y4_Early1500_OCS_Diversity | 4 | 0 | TRUE | 50 |
+| 23_GS_Y4_Early1500_OCS_Balanced | 4 | 0 | TRUE | 20 |
+| 24_GS_Y4_Early1500_OCS_Gain | 4 | 0 | TRUE | 5 |
 
 ## Prediction and annual events
 
@@ -141,38 +131,14 @@ and age restrictions. Non-OCS uses 20 equal-size crossing events; OCS produces
 Repeated parental pairs are permitted. Rejected pollen does not change the parents
 of an event or its allocated family size. Failures remain explicit.
 
-The current design version is PT_AT_ET_optiSel_native_offspring_v9. Annual-v4 phenotypic burn-ins
-are biologically compatible if their six PT archives and annual calendar are present;
-scenario models are reset and results must be rerun. Historical results stay preserved
-and are not combined with the corrected decision-specific results.
+## Version and provenance
 
-
-## OCS version and result provenance
-
-The v9 update replaces the v8 custom rounding, integer recovery and local refinement
-with native optiSel offspring allocation. It also removes the maximum of 32 OCS
-parents and the budget of 20 OCS crossing events. The 10% combined contribution
-cap, alpha values .10/.20/.40, annual calendar, prediction models, stage cuts and
-1,500 -> 500 early selection remain in place.
-
-The alpha endpoints are now continuous optiSel endpoints; their values and alpha
-trade-offs must not be interpreted as identical to the earlier heuristic endpoints.
-For N offspring, tree contribution equals its total maternal and paternal offspring
-count divided by 2N; N=1500 permits at most 300 offspring-parent incidences per tree.
-The limit implies at least ten contributing trees, but no upper count is imposed.
-
-Audit files record the original native fits, rounded per-role offspring counts,
-role-to-tree map, variable family sizes, pairing constraints, solver status and
-post-rounding coancestry/cap checks. Coancestry departures are reported, not hidden;
-ocsBoundSatisfied can be FALSE in an otherwise completed v9 trajectory. Results record variableFamilySizes,
-numberOfParentalPairs and maxContributingParents (NA for OCS). progenyPerCross is
-NA when OCS family sizes vary. The first future cohort uses the initial crossing
-plan, before the first OCS decision takes effect, and is recorded accordingly.
-
-The baseline diagram remains valid. The all-schemes diagram now shows the v9
-10% per-genotype contribution limit.
-Its editable SVG source and 7200 x 7272 PNG are available in docs/figures.
-The preceding figure version is backed up outside the repository.
-
-Updating these sources does not launch any simulation or modify frozen runs.
-Historical v7/v8 results remain separate from v9 and must not be relabelled.
+The current OCS design is `PT_AT_ET_optiSel_single_genotype_Ne_v10`.
+Earlier matched burn-ins can be reused with their seeds and environments;
+historical future results must retain their original versions. Only GS6 and
+speed-GS2 OCS belong to the paper; exploratory GS4 OCS is not launched.
+The early selection, calendars, phenotyping and prediction models are unchanged.
+For N=1500, a genotype contributes its combined maternal/paternal count divided
+by 3000; the 10% cap allows at most 300 participations. Audits preserve timings,
+Ne control, parental reference, L proxy, counts, allocation mode and departures.
+Updating local sources does not itself launch simulations or publish to GitHub.

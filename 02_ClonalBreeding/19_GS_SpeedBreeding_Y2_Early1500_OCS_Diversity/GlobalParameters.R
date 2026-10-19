@@ -11,8 +11,10 @@ seedlings_keep <- 500L
 new_parents_per_year <- NA_integer_
 renewal_percent <- NA_real_
 nParents <- 32L # initial/burn-in pool only; not an OCS contributor limit
+# Legacy dispatch marker only; no alpha interpolation in v10.
 ocs_alpha <- 0.1
-ocs_backend <- "optiSel_native_offspring"
+ocs_target_Ne <- 50
+ocs_backend <- "optiSel_single_genotype_Ne_v10"
 speed_breeding <- TRUE
 minimum_mother_age <- 4L
 minimum_pollen_age <- 2L

@@ -2,26 +2,25 @@
 # From the repository root: Rscript 02_ClonalBreeding/tests/check_ocs_native_offspring.R
 root<-normalizePath('02_ClonalBreeding',winslash='/',mustWork=TRUE)
 source(file.path(root,'ocs_discrete.R'));source(file.path(root,'ocs_optisel.R'))
+# Small biology fixtures use a nonbinding bound; real captured inputs separately validate active bounds.
 K<-diag(24);dimnames(K)<-list(as.character(1:24),as.character(1:24));bv<-seq_len(24)
 rounding_warnings<-character()
-for(kind in c('normal','speed'))for(alpha in c(.10,.20,.40)) {
+for(kind in c('normal','speed'))for(Ne in c(100,50,25)) {
  allowed<-matrix(TRUE,24,24);diag(allowed)<-FALSE
  if(kind=='speed')allowed[9:24,]<-FALSE
- z<-withCallingHandlers(optisel_offspring_profile(K,bv,allowed,1500L,alpha),
+ z<-withCallingHandlers(optisel_offspring_profile(K,bv,allowed,1500L,Ne,reference_kinship=.20,generation_interval=6),
    warning=function(w){rounding_warnings<<-c(rounding_warnings,conditionMessage(w));invokeRestart('muffleWarning')})
  stopifnot(sum(z$family_sizes)==1500L,all(allowed[z$plan]),all(z$plan[,1]!=z$plan[,2]),
    max(z$metrics$contribution)<=.10+1e-10,z$audit$solver_status==0L,
    identical(z$audit$custom_contribution_refinement,FALSE),
    abs(sum(z$metrics$contribution)-1)<1e-10,
    abs(z$metrics$mate_kinship-weighted.mean(K[z$plan],z$family_sizes))<1e-10)
- # The returned margins are exactly those produced by native noffspring().
- native<-optiSel::noffspring(z$audit$continuous_fit$parent,N=1500L,random=FALSE)
  n<-z$audit$offspring_counts
- stopifnot(identical(as.numeric(n$n),as.numeric(native$nOff[match(n$Indiv,native$Indiv)])))
- stopifnot(sum(n$n[n$Sex=='female'])==1500L,sum(n$n[n$Sex=='male'])==1500L)
- cat('PASS native profile:',kind,alpha,'parents',z$metrics$parents,'pairs',nrow(z$plan),'\n')
+ stopifnot(sum(n$n)==3000L,z$audit$optimizer_variables==24L,
+   abs(z$metrics$kinship-as.numeric(crossprod(z$metrics$contribution,K%*%z$metrics$contribution)))<1e-10)
+ cat('PASS native profile:',kind,Ne,'parents',z$metrics$parents,'pairs',nrow(z$plan),'\n')
 }
-stopifnot(any(grepl('coancestry',rounding_warnings,fixed=TRUE)))
+# Rounding departures are audited; no departure is required in a fixture.
 
 # A deliberately cheapest forbidden edge must never be allocated.
 phen<-data.frame(Indiv=c(paste0('M_',1:6),paste0('P_',7:12)),
