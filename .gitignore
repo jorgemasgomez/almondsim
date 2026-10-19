@@ -75,3 +75,6 @@ vignettes/*.pdf
 !docs/figures/almond_all_schemes_corrected.png
 
 !docs/figures/almond_all_schemes_corrected.svg
+
+/ocs_backup_*/
+/readme_figure_backup_*/
