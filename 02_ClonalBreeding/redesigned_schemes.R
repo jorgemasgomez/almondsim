@@ -48,12 +48,11 @@ redesign_scenarios <- function(root=NULL) {
  rows[[length(rows)+1L]] <- make('GS',2L)
  for(method in c('Pedigree','GS')) rows[[length(rows)+1L]] <- make(method,6L,TRUE)
  rows[[length(rows)+1L]] <- make('GS',2L,TRUE)
- for(rate in c(50,75,100)) rows[[length(rows)+1L]] <- make('GS',6L,FALSE,rate)
  for(first in c(6L,2L)) for(i in 1:3) rows[[length(rows)+1L]] <-
    make('GS',first,TRUE,alpha=c(.10,.20,.40)[i],profile=c('Diversity','Balanced','Gain')[i])
- for(i in 1:3) rows[[length(rows)+1L]] <- make('GS',4L,TRUE,alpha=c(.10,.20,.40)[i],profile=c('Diversity','Balanced','Gain')[i])
  result <- do.call(rbind,rows)
- result$folder_name <- sprintf('%02d_%s',seq_len(nrow(result)),result$scenario_id)
+ # Preserve existing folder identifiers for the 18 retained schemes.
+ result$folder_name <- sprintf('%02d_%s',c(seq_len(12L),16:21),result$scenario_id)
  if(!is.null(root)) {
   for(i in seq_len(nrow(result))) {
    settings <- new.env(parent=baseenv())

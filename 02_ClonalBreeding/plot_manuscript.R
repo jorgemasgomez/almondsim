@@ -5,21 +5,17 @@ manuscript_catalogue <- function() {
   'Pedigree_Y4','GS_Y4','GS_SpeedBreeding_Y2',
   'Pedigree_Y6_Early1500','GS_Y6_Early1500','GS_SpeedBreeding_Y2_Early1500',
   paste0('GS_Y6_Early1500_OCS_',c('Diversity','Balanced','Gain')),
-  paste0('GS_SpeedBreeding_Y2_Early1500_OCS_',c('Diversity','Balanced','Gain')),
-  paste0('GS_Y6_R',c(50,75,100)))
+  paste0('GS_SpeedBreeding_Y2_Early1500_OCS_',c('Diversity','Balanced','Gain')))
  labels<-c('PH9','PED9','GS9','PH6','PED6','GS6','PED4','GS4','SB2',
-  'PED6-E','GS6-E','SB2-E','GS6-OD','GS6-OB','GS6-OG','SB2-OD','SB2-OB','SB2-OG',
-  'GS6-R50','GS6-R75','GS6-R100')
+  'PED6-E','GS6-E','SB2-E','GS6-OD','GS6-OB','GS6-OG','SB2-OD','SB2-OB','SB2-OG')
  block<-c(rep('Selection accuracy',3),rep('Generation interval',6),
-  rep('Selection intensity',3),rep('Optimal contribution selection',6),rep('Parental renewal (supplement)',3))
+  rep('Selection intensity',3),rep('Optimal contribution selection',6))
  family<-ifelse(grepl('^Pheno',ids),'Pheno',ifelse(grepl('^Pedigree',ids),'Pedigree','GS'))
- # Method families are stable across all trajectory figures: orange, purple, blue.
  colors<-c('#B45309','#581C87','#102A56','#F59E0B','#9333EA','#2459A6',
   '#C084FC','#4A87D7','#86B7EA','#7E22CE','#123F72','#3294C6',
-  '#111D56','#244DC7','#538DD5','#145A80','#478CAD','#9ACBE2',
-  '#123E85','#5086C3','#A3C7EA')
+  '#111D56','#244DC7','#538DD5','#145A80','#478CAD','#9ACBE2')
  data.frame(scenario=ids,label=labels,block=block,family=family,color=colors,
-  paper=seq_along(ids)<=18L,stringsAsFactors=FALSE)
+  paper=TRUE,stringsAsFactors=FALSE)
 }
 
 manuscript_blocks <- function() {
@@ -31,15 +27,12 @@ manuscript_blocks <- function() {
    ids=c('GS_Y6','GS_Y6_Early1500','Pedigree_Y6','Pedigree_Y6_Early1500',
      'GS_SpeedBreeding_Y2','GS_SpeedBreeding_Y2_Early1500')),
   list(name='04_optimal_contribution_selection',title='Optimal contribution selection',
-   ids=c('GS_Y6_Early1500',cat$scenario[13:15],'GS_SpeedBreeding_Y2_Early1500',cat$scenario[16:18])),
-  list(name='S01_parental_renewal',title='Parental renewal | supplementary',
-   ids=c('GS_Y6',paste0('GS_Y6_R',c(50,75,100)))))
+   ids=c('GS_Y6_Early1500',cat$scenario[13:15],'GS_SpeedBreeding_Y2_Early1500',cat$scenario[16:18])))
 }
 
 # Order each legend top-to-bottom within meaningful, aligned columns.
 manuscript_legend <- function(block) {
  ids<-block$ids
- if(block$name=='S01_parental_renewal')return(list(order=ids,nrow=1L,padding=character()))
  if(block$name=='04_optimal_contribution_selection') {
   groups<-list(GS6=ids[grepl('^GS_Y6',ids)],SB2=ids[grepl('^GS_SpeedBreeding',ids)])
  }else if(block$name=='03_selection_intensity') {
@@ -204,7 +197,6 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
   panel_coverage[[b$name]]<-data.frame(panel=b$name,scenario=b$ids,n=as.integer(counts),
    paired=paired,preview=preview)
   labs<-setNames(cat$label[match(b$ids,cat$scenario)],b$ids)
-  if(b$name=='S01_parental_renewal')labs['GS_Y6']<-'GS6-R25'
   colors<-setNames(cat$color[match(b$ids,cat$scenario)],b$ids)
   if(b$name=='04_optimal_contribution_selection') {
    # Separate GS6 and speed breeding by hue in this OCS-only comparison.
@@ -251,7 +243,7 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
  saveRDS(input$data,file.path(out,'complete_trajectory_data.rds'))
 
  # Last-year boxplots: all 18 main-text schemes, ordered by Methods block.
- # Renewal and exploratory GS4 OCS are excluded. Each point is one replicate.
+ # Each point is one replicate from one of the 18 retained schemes.
  paper<-cat[cat$paper,,drop=FALSE]
  final<-input$data[input$data$future_year==input$config$config$future&input$data$scenario%in%paper$scenario,,drop=FALSE]
  endpoint_labels<-c('Genetic gain','Genetic variance')
@@ -317,10 +309,10 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
  writeLines(c(paste('Data status:',subtitle),
   paste('Historical OCS:',historical_ocs),
   'No overall titles, subtitles or explanatory captions are printed inside figures.',
-  'Four main horizontal triptychs, one supplementary renewal triptych, one vertical endpoint grid.',
+  'Four horizontal triptychs and one vertical endpoint grid.',
   'Trajectory metric order: selection accuracy, genetic gain, genetic variance. Solid lines only.',
   'Trajectory colours identify method families (Pheno orange, pedigree purple, GS blue); OCS panel separates GS6 blues from speed-breeding turquoises.',
-  'Endpoint colours identify Methods blocks, in manuscript order. No renewal or GS4 OCS in endpoint grid.',
+  'Endpoint colours identify Methods blocks, in manuscript order. All 18 schemes are included in the endpoint grid.',
   'Paired trajectory means require shared complete replicate IDs; previews omit unavailable arms from pairing.',
   'Endpoint grid contains genetic gain and genetic variance only. Boxes show complete replicates per scheme, not paired differences.',
   'Gain is relative to the replicate burn-in; variance uses retained seedlings; accuracy is measured before early selection.',

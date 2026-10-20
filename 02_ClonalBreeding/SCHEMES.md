@@ -9,15 +9,15 @@ Parents completing PT in year 5 can first cross in year 6.
 Predictive selection before own phenotyping permits first use in year 4.
 Speed breeding permits pollen from year 2, with mothers from year 4.
 
-Baseline replacement is 8 new + 24 retained. GS–6 renewal rates 50/75/100%
-use 500 individuals with **no early selection**. Increased selection intensity
+Baseline replacement is 8 new + 24 retained. Increased selection intensity
 uses 20 crosses x 75 offspring -> 500 selected seedlings in non-OCS arms.
-All nine OCS arms retain 1,500 offspring -> 500 selected seedlings, but allow variable
+All six OCS arms retain 1,500 offspring -> 500 selected seedlings, but allow variable
 family sizes and any number of parental pairs and contributing trees. The ordinary
 32-parent pool and fixed replacement rates continue to apply only to non-OCS arms.
 
-OCS v10 uses one optimizer variable per genotype, a combined 10% cap and
-Ne-based controls 50/20/5 for Diversity/Balanced/Gain. A single native
+OCS uses one optimizer variable per genotype and Ne-based controls 30/10/5
+for Diversity/Balanced/Gain. GS6 retains the 10% individual cap; speed breeding
+uses a 3.2% adult cap and 10% young cap, requiring at least 16 adult contributors. A single native
 opticont max.BV fit uses the package-default solver. Native noffspring performs
 integer rounding. Fixed role groups use matings; mixed-role speed breeding
 uses a directed integer lpSolve allocation preserving total native counts.
@@ -41,18 +41,12 @@ guarantees of realized effective population size.
 | 10_Pedigree_Y6_Early1500 | 6 | 2 | TRUE | NA |
 | 11_GS_Y6_Early1500 | 6 | 2 | TRUE | NA |
 | 12_GS_SpeedBreeding_Y2_Early1500 | 2 | 0 | TRUE | NA |
-| 13_GS_Y6_R50 | 6 | 2 | FALSE | NA |
-| 14_GS_Y6_R75 | 6 | 2 | FALSE | NA |
-| 15_GS_Y6_R100 | 6 | 2 | FALSE | NA |
-| 16_GS_Y6_Early1500_OCS_Diversity | 6 | 2 | TRUE | 50 |
-| 17_GS_Y6_Early1500_OCS_Balanced | 6 | 2 | TRUE | 20 |
+| 16_GS_Y6_Early1500_OCS_Diversity | 6 | 2 | TRUE | 30 |
+| 17_GS_Y6_Early1500_OCS_Balanced | 6 | 2 | TRUE | 10 |
 | 18_GS_Y6_Early1500_OCS_Gain | 6 | 2 | TRUE | 5 |
-| 19_GS_SpeedBreeding_Y2_Early1500_OCS_Diversity | 2 | 0 | TRUE | 50 |
-| 20_GS_SpeedBreeding_Y2_Early1500_OCS_Balanced | 2 | 0 | TRUE | 20 |
+| 19_GS_SpeedBreeding_Y2_Early1500_OCS_Diversity | 2 | 0 | TRUE | 30 |
+| 20_GS_SpeedBreeding_Y2_Early1500_OCS_Balanced | 2 | 0 | TRUE | 10 |
 | 21_GS_SpeedBreeding_Y2_Early1500_OCS_Gain | 2 | 0 | TRUE | 5 |
-| 22_GS_Y4_Early1500_OCS_Diversity | 4 | 0 | TRUE | 50 |
-| 23_GS_Y4_Early1500_OCS_Balanced | 4 | 0 | TRUE | 20 |
-| 24_GS_Y4_Early1500_OCS_Gain | 4 | 0 | TRUE | 5 |
 
 ## Prediction and annual events
 
@@ -133,12 +127,12 @@ of an event or its allocated family size. Failures remain explicit.
 
 ## Version and provenance
 
-The current OCS design is `PT_AT_ET_optiSel_single_genotype_Ne_v10`.
+The current OCS source design is `PT_AT_ET_optiSel_adultcap32_v12`.
 Earlier matched burn-ins can be reused with their seeds and environments;
-historical future results must retain their original versions. Only GS6 and
-speed-GS2 OCS belong to the paper; exploratory GS4 OCS is not launched.
+historical future results must retain their original versions. All 18 retained schemes belong to the manuscript comparison.
 The early selection, calendars, phenotyping and prediction models are unchanged.
 For N=1500, a genotype contributes its combined maternal/paternal count divided
-by 3000; the 10% cap allows at most 300 participations. Audits preserve timings,
+by 3000; the 10% cap allows at most 300 participations, and the 3.2% adult
+cap in speed breeding allows at most 96. Audits preserve timings,
 Ne control, parental reference, L proxy, counts, allocation mode and departures.
 Updating local sources does not itself launch simulations or publish to GitHub.

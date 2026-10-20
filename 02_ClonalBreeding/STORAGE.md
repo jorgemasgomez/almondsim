@@ -1,9 +1,9 @@
 # Code and external data
 
-The active catalogue has 24 schemes; the manuscript excludes the three exploratory GS4 OCS schemes (21 schemes). Run `main.R` explicitly for all schemes,
+The active catalogue contains the 18 manuscript schemes. Run `main.R` explicitly for all schemes,
 or `<numbered scenario>/00RUNME.R` for one. Sourcing the engine only defines functions.
 Default: 10 replicates, 40 burn-in years and 40 future years, preceded by 14 fixed-founder
-initialization cycles. Full successful future coverage is 9,600 unique rows for the full catalogue (24 x 10 x 40), or 8,400 rows for the 21 manuscript schemes.
+initialization cycles. Full successful future coverage is 7,200 unique rows (18 x 10 x 40).
 
 New runs are written outside this repository to the sibling
 `almondsim_data/manuscript_runs` directory. `ALMONDSIM_DATA_DIR` changes the external
@@ -16,6 +16,7 @@ ASReml workspace 16gb. A failed scenario stops only that scenario in that replic
 Other scenarios and replicates continue. Plot coverage explicitly excludes incomplete
 trajectories. Historical code is backed up outside this source tree during migration.
 
-Current source design: PT_AT_ET_optiSel_native_offspring_v9. OCS uses native offspring
+Current source design: PT_AT_ET_optiSel_adultcap32_v12. OCS uses native offspring
 allocation with variable family sizes, no upper limit on parent/pair count, and a
-10% combined contribution cap. Frozen earlier experiments are not modified.
+10% combined contribution cap in GS6. Speed breeding uses a 3.2% adult cap
+and a 10% young cap, requiring at least 16 contributing adults. Frozen earlier experiments are not modified.

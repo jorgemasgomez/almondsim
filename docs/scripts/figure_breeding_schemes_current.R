@@ -7,11 +7,11 @@ dir.create(out,recursive=TRUE,showWarnings=FALSE)
 row<-function(label,parent,early=FALSE,renew=8,ocs=FALSE)list(label=label,parent=parent,early=early,renew=renew,ocs=ocs)
 blocks<-list(
  list(title='Selection accuracy',color='#2677AD',rows=list(row('Pheno\u20139',9),row('Pedigree\u20139',9),row('GS\u20139',9))),
- list(title='Generation interval',color='#5265A1',rows=list(row('Pheno / Pedigree / GS\u20139',9),row('Pheno / Pedigree / GS\u20136',6),row('Pedigree / GS\u20134',4),row('Speed breeding GS\u20132',2),row('GS\u20136 | 50% renewal',6,renew=16),row('GS\u20136 | 75% renewal',6,renew=24),row('GS\u20136 | 100% renewal',6,renew=32))),
+ list(title='Generation interval',color='#5265A1',rows=list(row('Pheno / Pedigree / GS\u20139',9),row('Pheno / Pedigree / GS\u20136',6),row('Pedigree / GS\u20134',4),row('Speed breeding GS\u20132',2))),
  list(title='Selection intensity',color='#B26F21',rows=list(row('Pedigree\u20136 | early1500',6,TRUE),row('GS\u20136 | early1500',6,TRUE),row('Speed breeding GS\u20132 | early1500',2,TRUE))),
  list(title='Optimal Contribution Selection',color='#337B65',rows=lapply(c('Diversity','Balanced','Gain'),function(p)row(paste0('GS\u20136 / speed breeding GS\u20132\nearly1500 | OCS ',p),c(6,2),TRUE,ocs=TRUE))))
 draw<-function(){
- par(mar=rep(0,4),xaxs='i',yaxs='i',family='sans',bg='white');plot.new();plot.window(c(0,2000),c(2020,0),asp=NA)
+ par(mar=rep(0,4),xaxs='i',yaxs='i',family='sans',bg='white');plot.new();plot.window(c(0,2000),c(1752,0),asp=NA)
  ink<-'#243C3B';muted<-'#778985';blue<-'#2366A3';orange<-'#DF7922';teal<-'#137B76';purple<-'#8060A8'
  box<-function(x,y,w,h,col)rect(x,y,x+w,y+h,col=col,border=NA)
  tx<-function(x,y,s,size=16,col=ink,bold=FALSE,anchor=.5)text(x,y,s,adj=c(anchor,.2),cex=size*.432/12,font=if(bold)2 else 1,col=col)
@@ -27,7 +27,7 @@ draw<-function(){
  y<-225
  for(b in blocks){box(25,y,1950,42,b$color);tx(43,y+29,b$title,23,'white',TRUE,0);y<-y+68
  for(ri in seq_along(b$rows)){r<-b$rows[[ri]]
- if(b$title=='Generation interval'&&ri%in%c(1,5)){tx(40,y+12,if(ri==1)'Timing of parental entry' else 'Parental replacement rate',19,b$color,TRUE,0);y<-y+40}
+ if(b$title=='Generation interval'&&ri==1){tx(40,y+12,'Timing of parental entry',19,b$color,TRUE,0);y<-y+40}
  rh<-if(r$ocs)100 else 76;if(ri%%2==1)box(25,y-9,1950,rh-11,'#F3F6F8')
  labels<-strsplit(r$label,'\n',fixed=TRUE)[[1]]
  if(length(labels)==2){tx(40,y+17,labels[1],17,bold=TRUE,anchor=0);tx(40,y+43,labels[2],17,bold=TRUE,anchor=0)}else tx(40,y+33,r$label,18,bold=TRUE,anchor=0)
@@ -43,8 +43,8 @@ draw<-function(){
  circle(1690,y+14,9,'white',blue);tx(1690,y+19,'P',12,blue,TRUE);tx(1710,y+20,'First parental use',16,muted,anchor=0)
 }
 stem<-file.path(out,'almond_all_schemes_corrected')
-png(paste0(stem,'.png'),width=7200,height=7272,res=600,type='cairo',pointsize=12);draw();dev.off()
-svg(paste0(stem,'.svg'),width=12,height=12.12,pointsize=12);draw();dev.off()
-png(file.path(out,'preview.png'),width=1600,height=1616,res=133.333,type='cairo',pointsize=12);draw();dev.off()
-cat('Generated PNG 7200x7272 at 600 dpi and SVG from the same R drawing function.\n')
+png(paste0(stem,'.png'),width=7200,height=6307,res=600,type='cairo',pointsize=12);draw();dev.off()
+svg(paste0(stem,'.svg'),width=12,height=10.512,pointsize=12);draw();dev.off()
+png(file.path(out,'preview.png'),width=1600,height=1402,res=133.333,type='cairo',pointsize=12);draw();dev.off()
+cat('Generated PNG 7200x6307 at 600 dpi and SVG from the same R drawing function.\n')
 

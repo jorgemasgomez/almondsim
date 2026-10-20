@@ -13,11 +13,9 @@ Optional pointwise 95% Monte Carlo intervals require at least two replicates.
 2. **Generation interval:** those three plus PH6, PED6, GS6, PED4, GS4 and SB2.
 3. **Selection intensity:** GS6, PED6 and SB2, each with standard 500 and early
    1,500 -> 500 selection (suffix E).
-4. **OCS:** GS6-E and SB2-E controls, each with Diversity (.10), Balanced (.20)
-   and Gain (.40). Exploratory GS4 OCS is excluded.
-5. **Supplement S01:** GS6 renewal 25%, 50%, 75% and 100%. These variants are
-   kept out of the main trajectory panels and the final-year overview.
-6. **Final-year overview:** a vertical stack of two boxplots, genetic gain above genetic
+4. **OCS:** GS6-E and SB2-E controls, each with Diversity (Ne=30), Balanced (Ne=10)
+   and Gain (Ne=5).
+5. **Final-year overview:** a vertical stack of two boxplots, genetic gain above genetic
    variance, with all 18 main-text schemes. Methods blocks determine order and fill:
    selection accuracy, generation interval, selection intensity, OCS.
 
@@ -79,8 +77,7 @@ panels have separate Pheno, Pedigree and GS columns, with first-use years ordere
 9, 6, 4, 2 where applicable. Empty alignment cells are invisible. Intensity uses
 Pedigree, GS6 and speed-breeding columns, each showing the standard control above
 early selection. OCS has GS6 and speed-breeding columns, each ordered control,
-Diversity, Balanced, Gain. The supplementary renewal legend reads 25%, 50%, 75%,
-100%. No overall figure titles or explanatory footnotes are added.
+Diversity, Balanced, Gain. No overall figure titles or explanatory footnotes are added.
 
 ## OCS palette and endpoint metrics
 

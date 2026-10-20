@@ -23,11 +23,11 @@ The default experiment comprises 14 initialization cycles, a 40-year burn-in and
 | Comparison | Strategies |
 | --- | --- |
 | Selection accuracy | Phenotypic selection, pedigree BLUP and genomic selection with first parental use in year 9 |
-| Generation interval | First parental use in years 9, 6, 4 or 2, where supported by the selection method; GS–6 parental renewal of 25%, 50%, 75% or 100% |
+| Generation interval | First parental use in years 9, 6, 4 or 2, where supported by the selection method |
 | Selection intensity | Standard cohorts of 500 versus early selection of 500 from 1,500 seedlings |
 | Optimal contribution selection | GS–6 and speed breeding GS–2 with Diversity, Balanced and Gain profiles |
 
-The repository contains **24 schemes**. The manuscript set contains **21 schemes**, excluding the three exploratory GS–4 OCS schemes. The full list, identifiers and prediction rules are in [SCHEMES.md](02_ClonalBreeding/SCHEMES.md).
+The repository contains the **18 breeding schemes** evaluated in the manuscript. The full list, identifiers and prediction rules are in [SCHEMES.md](02_ClonalBreeding/SCHEMES.md).
 
 ### Prediction models
 
@@ -119,10 +119,6 @@ config$threads <- 6L
 
 scenarios <- redesign_all_scenarios(root)
 
-# Retain the 21 manuscript schemes; omit exploratory GS–4 OCS.
-scenarios <- scenarios[
-  !grepl("^GS_Y4_Early1500_OCS_", scenarios$scenario_id),
-]
 
 run <- run_redesigned_schemes(root, config, scenarios)
 
@@ -130,7 +126,7 @@ source(file.path(root, "plot_results.R"))
 plot_experiment(run$run_dir)
 ```
 
-For the full 24-scheme catalogue, omit the filtering step. Alternatively, explicitly running [main.R](02_ClonalBreeding/main.R) launches the full default catalogue, while each numbered scenario folder contains an individual `00RUNME.R` entry point.
+Explicitly running [main.R](02_ClonalBreeding/main.R) launches the full default catalogue, while each numbered scenario folder contains an individual `00RUNME.R` entry point.
 
 Phenotypic and genomic schemes run in parallel. Pedigree schemes are processed afterwards in a sequential ASReml worker. Worker and thread counts should be adjusted to available resources and licence constraints.
 
@@ -140,18 +136,15 @@ Each experiment stores its configuration, source snapshot, progress information,
 
 A failed scenario is recorded separately while other scenarios continue. Coverage must be checked before reporting a comparison. At ten replicates and 40 future years, complete coverage corresponds to:
 
-- **8,400 annual rows** for the 21 manuscript schemes.
-- **9,600 annual rows** for the full 24-scheme catalogue.
+- **7,200 annual rows** for all 18 schemes (18 x 10 x 40).
 
 Report the actual number of complete paired replicates, preserve failed-run diagnostics and distinguish simulation uncertainty from missing coverage. Selection accuracy is evaluated against simulated genetic values for assessment, not supplied as a response to prediction models.
 
 ## Manuscript figures
 
 The plotting workflow produces four main horizontal triptychs (selection method,
-generation interval, selection intensity and OCS), a separate supplementary
-renewal panel, and a vertical final-year boxplot grid. The overview contains
-18 main-text schemes; renewal variants are supplementary and exploratory GS4 OCS
-is excluded. Method-family colours are consistent across trajectory panels;
+generation interval, selection intensity and OCS) and a vertical final-year
+boxplot grid containing all 18 schemes. Method-family colours are consistent across trajectory panels;
 endpoint colours identify the four Methods blocks.
 
 See [PLOTTING.md](02_ClonalBreeding/PLOTTING.md) for scheme abbreviations,
