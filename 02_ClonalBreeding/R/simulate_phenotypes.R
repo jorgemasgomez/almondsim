@@ -1,13 +1,6 @@
-# Generate aggregate yield evaluations and their correlated errors. Reference variances remain fixed after selection.
-# Function names describe each operation; all launchers use this shared implementation.
-
-# Update a correlated aggregate residual while preserving the requested marginal variance.
-update_correlated_error <- function(previous,old_variance,new_variance) {
-  if(old_variance<=1e-12) return(rnorm(length(previous),sd=sqrt(new_variance)))
-  covariance <- min(old_variance,new_variance)
-  ratio <- covariance/old_variance
-  ratio*previous+rnorm(length(previous),sd=sqrt(max(0,new_variance-covariance^2/old_variance)))
-}
+# Independent aggregate evaluations at the ends of PT, AT and elite trials.
+# AlphaSimR generates each stage phenotype; individual stage records are cached
+# so a genotype present in both a trial and the parental pool is evaluated once.
 
 # Create the shared annual environment calendar and restore the caller's RNG state.
 create_environment_schedule <- function(config,seed) {
@@ -20,58 +13,75 @@ create_environment_schedule <- function(config,seed) {
   setNames(runif(length(years)),as.character(years))
 }
 
-# Update one population's aggregate phenotype using its evaluation history and stage precision.
+# Return the residual budget for a separate stage trial. The target total
+# non-genetic variance includes one GxE environment, not an average of years.
+stage_phenotype_budget <- function(state,stage) {
+  endpoint <- if(stage=='Parents') 'ET3' else stage
+  if(!endpoint %in% c('PT2','AT3','ET3')) stop('Not a completed phenotyping stage.')
+  h2 <- unname(state$config$h2[[endpoint]])
+  total <- state$reference_variance*(1/h2-1)
+  residual <- total-state$reference_gxe_variance
+  if(!is.finite(residual)||residual < -1e-8)
+    stop('Stage target h2 is incompatible with the single-environment GxE variance.')
+  list(endpoint=endpoint,total=total,gxe=state$reference_gxe_variance,
+       residual=max(0,residual),h2=h2)
+}
+
+# Generate a completed-stage evaluation with native setPheno(). Intermediate
+# years carry the last completed evaluation, or NA before completion of PT.
 update_phenotypes <- function(pop,stage,state) {
   if(is.null(pop)) return(NULL)
-  if(is.null(state$environment_p) || is.null(state$annual_evaluations))
-    stop('Missing annual environment state. Generate a new burn-in.')
-  probability <- state$environment_p[[as.character(state$year)]]
-  if(is.null(probability) || !is.finite(probability)) stop('Annual environment is missing for this year.')
-  trait <- SP$traits[[1]]
-  if(!.hasSlot(trait,'envVar') || !length(pop@gxe)) stop('Annual evaluation requires the original GxE trait.')
-  annual_z <- qnorm(probability,sd=sqrt(trait@envVar))
-  residuals <- environment <- numeric(nInd(pop))
+  if(!identical(state$config$phenotyping_model,'independent_stage_setPheno_v1'))
+    stop('Stage phenotyping requires a newly generated stage-model burn-in.')
+  if(!is.environment(state$phenotype_records)) stop('Missing stage phenotype archive.')
   ids <- as.character(pop@id)
-  for(i in seq_along(ids)) {
-    history <- state$annual_evaluations[[ids[i]]]
-    if(is.null(history)) history <- list(years=integer(),sum_z=0,n=0L)
-    if(!state$year %in% history$years) {
-      history$years <- c(history$years,state$year)
-      history$sum_z <- history$sum_z+annual_z;history$n <- history$n+1L
-      state$annual_evaluations[[ids[i]]] <- history
+  endpoint <- if(stage=='Parents') 'ET3' else stage
+  if(!endpoint %in% c('PT2','AT3','ET3')) {
+    # Never retain a default phenotype generated when a new Pop was created.
+    # Only completed trial records may be used by selection or prediction.
+    for(i in seq_along(ids)) {
+      records <- state$phenotype_records[[ids[i]]]
+      available <- intersect(c('PT2','AT3','ET3'),names(records))
+      if(!length(available)) pop@pheno[i,1] <- NA_real_ else {
+        record <- records[[tail(available,1)]]
+        pop@pheno[i,1] <- record$phenotype;pop@fixEff[i] <- record$year
+      }
     }
-    environment[i] <- pop@gxe[[1]][i]*history$sum_z/history$n
-    # Budget includes averaged GxE: do not add it on top of the full target error.
-    total_error <- state$reference_variance*(1/state$config$h2[[stage]]-1)
-    variance <- total_error-state$reference_gxe_variance/history$n
-    if(variance < -1e-8) stop('Target aggregate h2 is incompatible with annual GxE variance.')
-    variance <- max(0,variance)
-    prior <- state$errors[[ids[i]]]
-    if(is.null(prior)) error <- rnorm(1,sd=sqrt(variance)) else
-      error <- update_correlated_error(prior$error,prior$variance,variance)
-    state$errors[[ids[i]]] <- list(error=error,variance=variance)
-    residuals[i] <- error
+    return(pop)
   }
-  pop@pheno <- matrix(as.numeric(gv(pop))+environment+residuals,ncol=1)
-  pop@fixEff <- rep(as.integer(state$year),nInd(pop))
+  budget <- stage_phenotype_budget(state,endpoint)
+  probability <- state$environment_p[[as.character(state$year)]]
+  if(is.null(probability)||!is.finite(probability)) stop('Missing stage evaluation environment.')
+  missing <- which(vapply(ids,function(id)is.null(state$phenotype_records[[id]][[endpoint]]),logical(1)))
+  if(length(missing)) {
+    evaluated <- AlphaSimR::setPheno(pop[missing],varE=budget$residual,reps=1,
+      p=probability,fixEff=state$year,simParam=SP)
+    for(j in seq_along(missing)) {
+      i <- missing[j];id <- ids[i];records <- state$phenotype_records[[id]]
+      if(is.null(records)) records <- list()
+      records[[endpoint]] <- list(phenotype=as.numeric(evaluated@pheno[j,1]),
+        year=state$year,stage=endpoint,p=probability,residual_variance=budget$residual,
+        target_total_error=budget$total,target_h2=budget$h2)
+      state$phenotype_records[[id]] <- records
+    }
+  }
+  for(i in seq_along(ids)) {
+    record <- state$phenotype_records[[ids[i]]][[endpoint]]
+    pop@pheno[i,1] <- record$phenotype;pop@fixEff[i] <- record$year
+  }
   pop
 }
 
-# Evaluate retained parents according to their ages; juvenile parents have no yield phenotype.
+# Parents retain the last completed trial evaluation. At a trial endpoint they
+# share the same cached record as their trial copy. Newly imported old founders
+# receive an elite evaluation once; no independent annual re-phenotyping occurs.
 update_parent_phenotypes <- function(state) {
- age <- state$year-state$birth[as.character(state$parents@id)]
- if(anyNA(age)) stop('Unknown parental birth year.')
- parts <- list();juvenile <- which(age<4L)
- if(length(juvenile)) {
-  pop <- state$parents[juvenile];pop@pheno[,] <- NA_real_;parts[[1L]] <- pop
- }
- stages <- setdiff(names(state$config$h2),'Parents')
- counts <- pmin(length(stages),pmax(1L,age-3L))
- for(count in sort(unique(counts[age>=4L]))) {
-  pop <- state$parents[which(age>=4L & counts==count)]
-  parts[[length(parts)+1L]] <- update_phenotypes(pop,stages[count],state)
- }
- state$parents <- mergePops(parts)
- invisible(state)
+  age <- state$year-state$birth[as.character(state$parents@id)]
+  if(anyNA(age)) stop('Unknown parental birth year.')
+  endpoint <- ifelse(age>=11L,'ET3',ifelse(age>=8L,'AT3',ifelse(age>=5L,'PT2','PT1')))
+  parts <- lapply(unique(endpoint),function(stage) {
+    update_phenotypes(state$parents[which(endpoint==stage)],stage,state)
+  })
+  state$parents <- mergePops(parts)
+  invisible(state)
 }
-

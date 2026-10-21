@@ -3,7 +3,7 @@
 
 # Return defaults; environment variables supply external data and founder locations.
 breeding_config <- function() {
- list(design_version='PT_AT_ET_optiSel_adultcap32_v12',reps=10L,workers=4L,threads=6L,
+ list(design_version='PT_AT_ET_stagePheno_v13',phenotyping_model='independent_stage_setPheno_v1',reps=10L,workers=4L,threads=6L,
   seed=20261005L,asreml_workspace='16gb',burnin=40L,future=40L,fill_cycles=14L,
   parents=32L,crosses=20L,progeny=25L,act=25L,ect=8L,entrants=8L,
   training_cohorts=3L,gs_solver='AlphaSimR::RRBLUP',early_selection=FALSE,seedlings_keep=500L,

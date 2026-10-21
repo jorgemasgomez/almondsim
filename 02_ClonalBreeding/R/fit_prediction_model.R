@@ -108,7 +108,7 @@ fit_validation_pedigree_blup <- function(state,train) {
   ids <- as.integer(train@id)
   response <- as.numeric(train@pheno)
   covariance <- state$reference_variance*relationship[ids,ids,drop=FALSE]
-  residual_variances <- vapply(as.character(train@id),function(id) state$errors[[id]]$variance,numeric(1))
+  residual_variances <- rep(stage_phenotype_budget(state,'PT2')$total,nInd(train))
   diag(covariance) <- diag(covariance)+residual_variances
   design <- model.matrix(~factor(train@fixEff))
   solved <- solve(covariance,cbind(response,design))
@@ -152,14 +152,14 @@ fit_pt_at_pedigree_model <- function(state,method,candidates) {
   if(!all(as.character(prediction@id)%in%names(values)))stop('Missing pedigree effects for prediction IDs.')
   components<-summary(model)$varcomp
   component<-function(label)components$component[grepl(label,rownames(components),fixed=TRUE)]
-  rPT<-component('Stage_PT:PT');rAT<-component('Stage_AT:AT');rCov<-component('Stage_AT:PT')
+  rPT<-component('Stage_PT');rAT<-component('Stage_AT');rCov<-0
   if(length(rPT)!=1L||length(rAT)!=1L||length(rCov)!=1L)stop('Cannot identify the repeated residual covariance components.')
   R<-matrix(c(rPT,rCov,rCov,rAT),2,2,dimnames=list(c('PT','AT'),c('PT','AT')))
   if(any(!is.finite(R))||min(eigen(R,symmetric=TRUE,only.values=TRUE)$values)<=0)stop('Repeated residual matrix is not positive definite.')
   calibration <- calculate_pt_at_residual_covariance(state)
   if(max(abs(R/R[1,1]-calibration$relative_matrix))>1e-7)stop('Pedigree residual ratios differ from the prespecified GS calibration.')
   attr(values,'training_diagnostics')<-list(solver='ASReml',heterogeneous=TRUE,repeated_residual=TRUE,
-    residual_structure='id(Ind):us(Stage) constrained shape',residual_shape_source='design_calibrated',calibration=calibration,observed_records=nrow(records),unique_individuals=length(unique(records$id)),
+    residual_structure='id(Ind):idh(Stage), independent stage errors with constrained ratio',residual_shape_source='design_calibrated',calibration=calibration,observed_records=nrow(records),unique_individuals=length(unique(records$id)),
     paired_individuals=sum(table(records$id)==2L),record_counts=table(records$stage),
     variance_components=components,residual_matrix=R,residual_correlation=rCov/sqrt(rPT*rAT),
     stable_components=stable(model),converged=model$converge,fixed_year=TRUE,cohort_keys=unique(records$cohort))
@@ -190,29 +190,16 @@ fit_decision_model <- function(state,method,anchor) {
 
 # Return the prespecified PT/AT relative residual covariance from the simulation error design.
 calculate_pt_at_residual_covariance <- function(state) {
-  A <- state$reference_variance
-  GE <- state$reference_gxe_variance
-  stages <- c('PT2','AT1','AT2','AT3')
-  durations <- 2:5
-  total <- A*(1/state$config$h2[stages]-1)
-  pure <- as.numeric(total-GE/durations)
-  stopifnot(all(is.finite(pure)),all(pure>0))
-  # Match update_correlated_error at EACH intermediate annual aggregate. Marginal
-  # pure error increases from AT1 to AT3 because the GE/n budget decreases.
-  pure_cov <- pure[1]
-  for(j in 2:4) pure_cov <- pure_cov*min(pure[j-1],pure[j])/pure[j-1]
-  # Expected annual GE covariance: two common years out of 2 and 5.
-  # This is a design-level marginal working covariance, not a fit to true gv
-  # or genotype-specific GxE slopes / realised annual effects.
-  total_cov <- pure_cov+GE/5
-  R <- matrix(c(total[1],total_cov,total_cov,total[4]),2,2,
-              dimnames=list(c('PT','AT'),c('PT','AT')))
-  stopifnot(all(is.finite(R)),min(eigen(R,symmetric=TRUE,only.values=TRUE)$values)>0)
+  if(!identical(state$config$phenotyping_model,'independent_stage_setPheno_v1'))
+    stop('The independent PT/AT model cannot use a legacy burn-in.')
+  budgets <- lapply(c('PT2','AT3'),function(stage)stage_phenotype_budget(state,stage))
+  total <- vapply(budgets,`[[`,numeric(1),'total')
+  # Distinct trials have independent annual environmental draws and residuals.
+  # Genetic values remain shared; this zero concerns NON-genetic covariance.
+  R <- diag(total);dimnames(R)<-list(c('PT','AT'),c('PT','AT'))
   list(absolute_working_matrix=R,relative_matrix=R/R[1,1],
-       residual_correlation=R[1,2]/sqrt(R[1,1]*R[2,2]),
-       intermediate_pure_error=pure,intermediate_stages=stages,
-       pure_error_covariance=pure_cov,expected_GE_covariance=GE/5,
-       source='prespecified simulation design; no true individual genetic values')
+       residual_correlation=0,expected_GE_covariance=0,pure_error_covariance=0,
+       stage_budgets=budgets,source='independent PT and AT stage trials; no shared annual records')
 }
 
 # Whiten repeated responses and designs, fit solveRRBLUP, and validate its normal equations.
@@ -274,19 +261,18 @@ fit_calibrated_asreml <- function(state,frame,inverse) {
   calibration <- calculate_pt_at_residual_covariance(state)
   R <- calibration$relative_matrix
   initial <- asreml::asreml(fixed=Pheno~1+Year,random=~vm(Ind,inverse),
-    residual=~id(Ind):us(Stage),na.action=asreml::na.method(y='include'),data=frame,start.values=TRUE)
+    residual=~id(Ind):idh(Stage),na.action=asreml::na.method(y='include'),data=frame,start.values=TRUE)
   tab <- initial$vparameters.table
   vcc <- cbind(group=seq_len(nrow(tab)),scale=rep(1,nrow(tab)))
   rownames(vcc) <- tab$Component
-  idx <- match(c('Ind:Stage!Stage_PT:PT','Ind:Stage!Stage_AT:PT','Ind:Stage!Stage_AT:AT'),tab$Component)
-  if(anyNA(idx))stop('Cannot identify residual parameters for calibrated constraints.')
+  idx <- match(c('Ind:Stage!Stage_PT','Ind:Stage!Stage_AT'),tab$Component)
+  if(anyNA(idx))stop('Cannot identify independent stage residual parameters: ',paste(tab$Component,collapse=', '))
   vcc[idx,1] <- vcc[idx[1],1]
-  vcc[idx,2] <- c(1,R['AT','PT'],R['AT','AT'])
-  # Start the three linked parameters at a coherent positive definite matrix.
+  vcc[idx,2] <- c(1,R['AT','AT'])
   scale <- tab$Value[idx[1]]
-  initial$R.param[['Ind:Stage']][['Stage']]$initial[] <- c(scale,R['AT','PT']*scale,R['AT','AT']*scale)
+  initial$R.param[['Ind:Stage']][['Stage']]$initial[] <- c(scale,R['AT','AT']*scale)
   fit <- do.call(asreml::asreml,list(fixed=Pheno~1+Year,random=~vm(Ind,inverse),
-    residual=~id(Ind):us(Stage),na.action=asreml::na.method(y='include'),data=frame,
+    residual=~id(Ind):idh(Stage),na.action=asreml::na.method(y='include'),data=frame,
     G.param=initial$G.param,R.param=initial$R.param,vcc=vcc))
   attr(fit,'design_calibration') <- calibration
   fit

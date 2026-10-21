@@ -125,6 +125,7 @@ run_replicate_job <- function(job) {
      stopifnot(nrow(result)==job$config$future,!anyDuplicated(result[c('rep','scenario','year')]))
      saveRDS(data.frame(id=seq_len(SP$lastId),dam=SP$pedigree[,1],sire=SP$pedigree[,2]),
        file.path(job$directory,paste0('pedigree_',scenario,'.rds')))
+     saveRDS(as.list(state$phenotype_records),file.path(job$directory,paste0('stage_phenotypes_',scenario,'.rds')))
      saveRDS(result,file.path(job$directory,paste0('results_',scenario,'.rds')))
      result
    })

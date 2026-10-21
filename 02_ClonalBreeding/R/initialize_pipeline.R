@@ -51,10 +51,10 @@ initialize_breeding_pipeline <- function(root,config) {
   state$ocs_trace <- list()
   state$reference_variance <- initVarG
   state$reference_gxe_variance <- initVarGE
-  state$annual_evaluations <- new.env(parent=emptyenv())
+  state$phenotype_records <- new.env(parent=emptyenv())
   environment_seed <- if(is.null(config$environment_seed)) config$seed+900000L else config$environment_seed
   state$environment_p <- create_environment_schedule(config,environment_seed)
-  state$errors <- new.env(parent=emptyenv())
+  # No legacy aggregate error history: distinct trial errors are independent.
   state$parents <- Parents
   state$birth <- setNames(rep(-30L,nInd(Parents)),as.character(Parents@id))
   state$pop <- setNames(vector('list',length(config$stages)),config$stages)

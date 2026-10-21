@@ -13,7 +13,7 @@ archive_evaluated_cohorts <- function(state) {
   if (is.null(state$stage_history)) {
     stop('This burn-in predates stage-specific training archives. Generate a new burn-in; do not reuse historical caches.')
   }
-  for (stage in setdiff(names(state$config$h2),'Parents')) {
+  for (stage in c('PT2','AT3','ET3')) {
     pop <- state$pop[[stage]]
     if (is.null(pop)) next
     entries <- state$stage_history[[stage]]
