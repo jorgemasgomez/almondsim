@@ -92,5 +92,6 @@ record_annual_results <- function(state, config, method, first, rep, accuracy,
  row$ocsCoancestryExcess <- if(is.null(ocs_solution)) NA_real_ else max(0,ocs_solution$metrics$kinship-ocs_solution$bound)
  row$ocsCoancestryExcessRelative <- if(is.null(ocs_solution)) NA_real_ else ocs_solution$solver_details$optimization_audit$rounded_kinship_excess_relative
  row$designVersion <- config$design_version
+ row$phenotypingModel <- config$phenotyping_model
  row
 }

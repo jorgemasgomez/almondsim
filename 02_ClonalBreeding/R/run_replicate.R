@@ -31,7 +31,10 @@ run_replicate_job <- function(job) {
  }
  log<-file(file.path(job$directory,paste0('execution_',job$phase,'.log')),'wt')
  sink(log);on.exit({sink();close(log)},add=TRUE)
- base_file<-file.path(job$directory,'burnin_redesigned.RData')
+ # A pilot can share one immutable burn-in across isolated scheme workers.
+ # Regular replicate jobs continue to create their own paired burn-in.
+ base_file<-if(is.null(job$burnin_file)) file.path(job$directory,'burnin_redesigned.RData') else
+   normalizePath(job$burnin_file,winslash='/',mustWork=TRUE)
  initialized<-capture_scenario_outcome(function() {
    progress('running','initialization')
    if(job$phase=='parallel') {
