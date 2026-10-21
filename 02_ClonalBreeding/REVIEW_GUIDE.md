@@ -13,7 +13,7 @@ All paths below are relative to `02_ClonalBreeding/`.
    Check whether each decision uses previous or current evaluations and whether
    newly chosen parents are used immediately or in the following year.
 3. **Check phenotypes:** `R/simulate_phenotypes.R`. Review annual environmental
-   sharing, accumulated evaluation years and correlated aggregate errors.
+   sharing, native setPheno() at trial endpoints, cached records and independent stage errors.
 4. **Check prediction:** `R/build_training_population.R`, then
    `R/fit_prediction_model.R` and `R/predict_genetic_values.R`. Check cohort
    identities and candidate own records, not only training-set sizes.
@@ -78,19 +78,16 @@ select_breeding_schemes(root, 'GS6-E') # inspect settings; no run
 Rscript 02_ClonalBreeding/tests/check_readable_pipeline.R
 Rscript 02_ClonalBreeding/tests/check_ne_configuration.R
 Rscript 02_ClonalBreeding/tests/check_annual_cycle.R
+Rscript 02_ClonalBreeding/tests/check_stage_phenotyping.R
 Rscript 02_ClonalBreeding/tests/check_ocs_native_offspring.R
 ```
 
-The first check compares the executable syntax of 37 unchanged functions
-against signatures captured from commit
-`da0f9c8c2e7b46e10b972f84e4690229549d882e` before reorganization. It also checks
-unique module definitions, scheme aliases, CLI dispatch,
-source-freeze checksums and module loading in a separate R worker.
-Comments, whitespace and function source locations do not affect the signatures.
-The experiment controller has one intentional operational change: freezing the
-new `R/` directory in addition to the existing top-level files. Its worker
-scheduling and scientific settings remain unchanged. A separate expected
-controller signature checks that only this source-copy block was replaced.
+The first check validates 52 current stage-model function signatures, unique
+module definitions, aliases, CLI dispatch, source-freeze checksums and clean
+worker loading. Historical accumulated-model signatures remain in
+`tests/pipeline_reference_signatures.csv`; the current baseline is
+`tests/stage_pipeline_reference_signatures.csv`. This deliberate scientific
+change is not claimed to preserve the original phenotype formulas.
 
 The Ne configuration check covers the six intentional configuration/dispatch
 changes separately: an explicit OCS switch, target-Ne settings, removal of
@@ -108,7 +105,15 @@ output rows, call order and random-number state, including cached/initial models
 for all 18 schemes and initialization with recording/renewal enabled or disabled.
 Prediction and crossing use test doubles: this is an orchestration regression
 check, not a new numerical validation of those algorithms. The compact reference
-hashes are in `tests/annual_cycle_reference.csv`.
+hashes are in `tests/annual_cycle_reference.csv`. The stage-model reference
+retains the same state, call and RNG hashes. Only explicit model labels are
+normalized in this controlled fixture. All 38 recorded rows were checked with
+`identical()` against pre-change main; their serialized hashes were captured
+separately because R serialization can distinguish shared string references.
+`tests/stage_annual_cycle_reference.csv` is the current fixture baseline.
+
+The real stage-phenotyping check verifies exact native setPheno values, cached
+record reuse, distinct trial archives and the diagonal PT/AT residual shape.
 
 The final check exercises the current OCS allocation and crossing fixtures.
 These checks do not launch breeding replicates and do not require an ASReml
@@ -119,4 +124,3 @@ manuscript remain in their existing frozen runs, outside this refactor.
 
 See [Parental renewal](PARENTAL_RENEWAL.md) for the current/pending distinction,
 immediate versus next-year use, and ordinary replacement versus OCS.
-

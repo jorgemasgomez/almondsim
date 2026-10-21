@@ -83,3 +83,5 @@ vignettes/*.pdf
 !02_ClonalBreeding/tests/pipeline_reference_signatures.csv
 !02_ClonalBreeding/tests/annual_cycle_reference.csv
 !02_ClonalBreeding/tests/function_renames.csv
+!02_ClonalBreeding/tests/stage_pipeline_reference_signatures.csv
+!02_ClonalBreeding/tests/stage_annual_cycle_reference.csv

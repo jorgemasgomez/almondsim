@@ -1,7 +1,10 @@
-# Experimental stage phenotyping
+# Stage phenotyping
 
-This branch changes the scientific phenotype model. It must not be merged into
-the main pipeline merely because a single-replicate pilot completes.
+This phenotype model was incorporated into main at the user's request on
+21 October 2026. The single-replicate pilot was still running at integration:
+16 of 18 schemes had completed without recorded failures. This is a scientific
+model change, not a behavior-preserving rename. Historical manuscript results
+continue to describe their original frozen source versions.
 
 ## Separate PT, AT and elite trials
 
@@ -53,7 +56,8 @@ preflight and 1,500 PT + 75 AT genomic/pedigree fitting preflights also passed.
 
 Renaming-only regression tests passed on main before this scientific change.
 Their historic phenotype/calibration signatures intentionally do not describe
-this experimental branch. `tests/check_stage_phenotyping.R` tests the new model.
+the stage model. Separate stage-model signatures and controlled annual fixtures
+now validate the current implementation; the original references are retained. `tests/check_stage_phenotyping.R` tests the new model.
 
 The pilot must report coverage, failures, annual accuracy, gain relative to its
 own burn-in, final genetic variance, and wall time. A single replicate assesses

@@ -130,6 +130,13 @@ annual_fixture_case <- function(engine,scenario,cached=TRUE,record=TRUE,renew=TR
   state$prediction_pt_model<-if(cached)list(label='previous_PT2') else NULL
   engine$trace<-character();set.seed(84321L)
   row<-engine$advance_breeding_year(state,scenario$method,scenario$first_parental_use,1L,record,renew)
+  # This fixture controls phenotyping with a test double; compare orchestration
+  # with the original reference, normalizing only the explicit model labels.
+  # Real stage phenotyping is checked in check_stage_phenotyping.R.
+  if(!is.null(row))row$phenotypingModel<-NULL
+  state$config$phenotyping_model<-NULL
+  state$config$design_version<-'PT_AT_ET_optiSel_adultcap32_v12'
+  if(!is.null(row))row$designVersion<-'PT_AT_ET_optiSel_adultcap32_v12'
   snapshot<-as.list(state);snapshot<-snapshot[sort(names(snapshot))]
   c(row_md5=annual_fixture_hash(row),state_md5=annual_fixture_hash(snapshot),
     calls_md5=annual_fixture_hash(engine$trace),rng_md5=annual_fixture_hash(.Random.seed))

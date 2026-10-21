@@ -100,7 +100,7 @@ described in [MANUAL_OCS.md](MANUAL_OCS.md).
 | `R/run_replicate.R` | Initialize, burn in, and execute paired scenarios | Replicate seed/job -> records and audits |
 | `R/initialize_pipeline.R` | Import founders and populate initial stages | Founder bank -> mutable simulation state |
 | `R/advance_year.R` | Coordinate the biological annual sequence | State -> updated state and annual record |
-| `R/simulate_phenotypes.R` | Update correlated aggregate evaluations | Genetic values/environment/history -> phenotypes |
+| `R/simulate_phenotypes.R` | Generate and archive completed-stage evaluations | Genetic values/stage environment -> cached PT, AT and elite phenotypes |
 | `R/build_training_population.R` | Archive and choose decision cohorts | Evaluated cohorts -> PT or PT+AT training |
 | `R/fit_prediction_model.R` | Fit decision-specific models | Training data -> model/predictions and diagnostics |
 | `R/predict_genetic_values.R` | Predict candidate breeding values | Candidates/model -> scored candidates |

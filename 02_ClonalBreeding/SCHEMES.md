@@ -1,8 +1,8 @@
 # Active manuscript breeding design
 
 Years in scheme names denote **first parental use in crossing**.
-The crossing/seed cycle is year 0; juvenile stages are 1–3; PT 4–5;
-AT 6–8; ET 9–11. PT aggregate h2 is .20, AT .40, ET .50.
+The crossing/seed cycle is year 0; juvenile stages are 1â€“3; PT 4â€“5;
+AT 6â€“8; ET 9â€“11. PT aggregate h2 is .20, AT .40, ET .50.
 The fixed cuts are 500 -> 25 after PT and 25 -> 8 after AT.
 Eight selected individuals completing AT in year 8 can first cross in year 9.
 Parents completing PT in year 5 can first cross in year 6.
@@ -27,7 +27,7 @@ and audited. See [MANUAL_OCS.md](MANUAL_OCS.md) for the precise recurrence,
 standing-parent reference and generation-interval proxy. Ne controls are not
 guarantees of realized effective population size.
 
-| Folder | First cross year | Own phenotyping campaigns | Early selection | OCS Ne control |
+| Folder | First cross year | Field-evaluation years before first use | Early selection | OCS Ne control |
 |---|---:|---:|---|---:|
 | 01_Pheno_Y9 | 9 | 5 | FALSE | NA |
 | 02_Pedigree_Y9 | 9 | 5 | FALSE | NA |
@@ -75,18 +75,20 @@ Annual environment probabilities are sampled as in the original program:
 P[year] ~ Uniform(0,1), transformed by AlphaSimR's GxE trait to an annual normal
 covariate. A separate seed per replicate makes the entire calendar common to
 all paired scenarios, including burn-in, independently of scenario RNG draws.
-Each evaluated individual's environmental covariates are averaged over its
-phenotyped years (PT: years 4-5; end AT: years 4-8; end ET: years 4-11).
-Aggregate residuals remain correlated; they are not stored as independent annual
-phenotypes. Their marginal variance is calibrated against founder additive
-variance: sigma_A0^2(1/h2-1) minus sigma_GxE0^2/nYears, avoiding double counting
-annual GxE. This is a stage precision model, not raw repeated annual residuals.
-The targets refer to the reference population, averaged over random annual
-environments; realized precision may differ after selection and genetic change.
-PT/AT/ET h2 assumptions remain .20/.40/.50. Existing parents continue accumulating
-environmental evaluations; no duplicate evaluation is counted within a year.
-No additional, independent common Year offset is invented: the original GxE
-covariate itself changes yearly genotype responses and can shift population means.
+Completed trial evaluations are generated with AlphaSimR::setPheno() at PT2,
+AT3 and ET3, with reference h2 targets .20/.40/.50. These are separate trials,
+evaluated in different calendar years, not overlapping cumulative means.
+Intermediate stages retain the last completed evaluation; no yield phenotype
+is available before PT2. The stage environment is P[year], without averaging
+previous years. The same environmental calendar is shared within a replicate.
+Each individual/stage record is cached and shared between trial and parent
+copies. Retained parents keep their completed records, and acquire the next
+stage evaluation according to age. No duplicate phenotype is generated.
+
+Native residual variance equals A0*(1/h2-1)-GE0, with reps=1. With reference
+A0=GE0=150000, PT/AT/elite residual variances are 450000/75000/0. Elite still
+has GxE variation. Targets describe the reference population over random
+environments, not necessarily realized heritability after selection.
 
 GS-9 and Pedigree-9 use decision-specific repeated records. The PT cut uses
 1500 original PT observations from the current PT cohort and its two predecessors.
@@ -96,13 +98,12 @@ their 25 survivors per cohort. These are 1575 observations on 1500 individuals;
 75 IDs have paired PT/AT records with their own record years. Candidate own-record
 membership, cohort matching and three-year record separation are asserted.
 
-Both Y9 models retain fixed record Year and use the same design-calibrated relative
-residual matrix [[1, 0.3416666667], [0.3416666667, 0.375]] (rho=0.5579393),
-including the aggregate-error recursion and expected shared GxE. Reference absolute
-values are PT 600000, AT 225000, covariance 205000. Overall residual scale and
-genetic/marker variance are estimated separately in each fit. This is a marginal
-working covariance calibrated from the simulated design, not an estimate based
-on true individual genetic values or the complete realised GxE covariance.
+Both Y9 models retain fixed record Year and use the same independent-stage
+relative non-genetic variance matrix diag(1, 0.375). Reference absolute
+variances are PT 600000 and AT 225000, with zero cross-stage non-genetic
+covariance. Genetic effects remain shared across observations of the same
+individual. Overall residual scale and genetic/marker variance are estimated
+separately in each fit. The former overlapping-error covariance is not used.
 GS-9 uses native AlphaSimR::solveRRBLUP after whitening response, fixed design and
 markers; Pedigree-9 uses ASReml with proportional residual constraints. Its PT-only
 fit keeps the common residual. Both stages preserve fixed Year.
@@ -115,7 +116,7 @@ three training cohorts are appended. OCS uses the validated optiSel contribution
 
 The PT-anchored model updated after the year's evaluations is carried
 to the next year's early selection and juvenile parental selection.
-Parents continue to be evaluated according to age. Aggregate precision is calibrated jointly with the annual GxE contribution.
+Parents retain completed-stage evaluations and receive the next evaluation according to age.
 New candidates and existing parents are ranked separately for exact renewal.
 
 Selections made after PT/AT are queued for next year's crosses. Before-phenotyping
@@ -127,10 +128,10 @@ of an event or its allocated family size. Failures remain explicit.
 
 ## Version and provenance
 
-The current OCS source design is `PT_AT_ET_optiSel_adultcap32_v12`.
+The current full source design is `PT_AT_ET_stagePheno_v13`. The OCS optimization backend remains `optiSel_adultcap32_v12`.
 New runs require a burn-in generated with the current source design.
 Archived results retain their original frozen sources and versions. All 18 retained schemes belong to the manuscript comparison.
-The early selection, calendars, phenotyping and prediction models are unchanged.
+Early selection, cohort calendars and OCS constraints are unchanged. Stage phenotyping and the PT/AT error model differ from historical accumulated-evaluation runs; see [stage phenotyping](STAGE_PHENOTYPING.md).
 For N=1500, a genotype contributes its combined maternal/paternal count divided
 by 3000; the 10% cap allows at most 300 participations, and the 3.2% adult
 cap in speed breeding allows at most 96. Audits preserve timings,

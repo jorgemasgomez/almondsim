@@ -28,12 +28,12 @@ fingerprint <- function(fun) {
   saveRDS(list(formals=formals(normalized),body=canonicalize_names(syntax)),path,version=2,compress=FALSE)
   unname(tools::md5sum(path))
 }
-reference <- read.csv(file.path(root,'tests','pipeline_reference_signatures.csv'))
+reference <- read.csv(file.path(root,'tests','stage_pipeline_reference_signatures.csv'))
 actual <- vapply(reference$function_name,function(name)fingerprint(engine[[name]]),character(1))
 if(!identical(unname(actual),reference$ast_md5)) {
   stop('Scientific syntax differs: ',paste(reference$function_name[actual!=reference$ast_md5],collapse=', '))
 }
-cat('PASS:',nrow(reference)-1L,'unchanged scientific/runtime signatures and the controller with only its source-freeze update.\n')
+cat('PASS:',nrow(reference),'current stage-model function signatures. Historical accumulated-model signatures remain archived separately.\n')
 
 # There must be a single explicit definition per module-level function. PT-only
 # and repeated-record variants have distinct names instead of late overrides.
