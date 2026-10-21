@@ -29,6 +29,48 @@ The default experiment comprises 14 initialization cycles, a 40-year burn-in and
 
 The repository contains the **18 breeding schemes** evaluated in the manuscript. The full list, identifiers and prediction rules are in [SCHEMES.md](02_ClonalBreeding/SCHEMES.md).
 
+## Reading and reviewing the code
+
+Start with the [script connection diagrams](02_ClonalBreeding/PIPELINE.md) and
+[review guide](02_ClonalBreeding/REVIEW_GUIDE.md). The diagrams name each script
+and explain its task, from launching a scheme through the annual selection and
+crossing cycle to recording results. The central annual coordinator is
+[`R/advance_year.R`](02_ClonalBreeding/R/advance_year.R); the surrounding modules
+separate phenotyping, training, prediction, selection, parent allocation and
+execution. Existing `main.R` and scheme-specific `00RUNME.R` launchers remain
+supported through the compatibility loader `redesigned_schemes.R`.
+
+```mermaid
+flowchart TD
+    Launch["run_scheme.R / run_experiment.R<br/>Choose schemes and replication settings"] --> Load["redesigned_schemes.R<br/>Load the named R/ modules"]
+    Load --> Jobs["R/run_experiment.R + R/run_replicate.R<br/>Freeze code, initialize and coordinate replicates"]
+    Jobs --> Year["R/advance_year.R<br/>Coordinate each breeding year"]
+    Year --> Evaluate["R/simulate_phenotypes.R<br/>Update aggregate evaluations"]
+    Evaluate --> Model["R/build_training_population.R + R/fit_prediction_model.R<br/>Construct training data and fit decision models"]
+    Model --> Select["R/apply_selection.R + R/select_parents.R<br/>Select trial individuals and future parents"]
+    Select --> Record["R/record_results.R<br/>Save annual population summaries"]
+```
+
+This overview shows script responsibilities. The detailed pipeline guide also
+shows crossing, early selection and the different parental-decision timings.
+
+To inspect the new launchers without starting simulations:
+
+```sh
+Rscript 02_ClonalBreeding/run_scheme.R --help
+Rscript 02_ClonalBreeding/run_scheme.R --list
+```
+
+After configuring the external input/output paths below, a single scheme or a
+selected experiment can be started explicitly:
+
+```sh
+Rscript 02_ClonalBreeding/run_scheme.R --scheme=GS6-E --replicates=1 --workers=1 --threads=6
+Rscript 02_ClonalBreeding/run_experiment.R --schemes=GS6-E,SB2-E --replicates=10 --workers=4 --threads=6
+```
+
+These commands create new experiments; they do not resume existing runs.
+
 ### Prediction models
 
 - **Phenotypic selection** ranks candidates using their available aggregate phenotypes.

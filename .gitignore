@@ -78,3 +78,6 @@ vignettes/*.pdf
 
 /ocs_backup_*/
 /readme_figure_backup_*/
+
+# Small source-regression fixture; not generated simulation output.
+!02_ClonalBreeding/tests/pipeline_reference_signatures.csv

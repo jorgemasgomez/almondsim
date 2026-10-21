@@ -5,16 +5,24 @@ source(file.path(root,'ocs_discrete.R'));source(file.path(root,'ocs_optisel.R'))
 # Small biology fixtures use a nonbinding bound; real captured inputs separately validate active bounds.
 K<-diag(24);dimnames(K)<-list(as.character(1:24),as.character(1:24));bv<-seq_len(24)
 rounding_warnings<-character()
-for(kind in c('normal','speed'))for(Ne in c(100,50,25)) {
+for(kind in c('normal','speed'))for(Ne in c(30,10,5)) {
  allowed<-matrix(TRUE,24,24);diag(allowed)<-FALSE
- if(kind=='speed')allowed[9:24,]<-FALSE
- z<-withCallingHandlers(optisel_offspring_profile(K,bv,allowed,1500L,Ne,reference_kinship=.20,generation_interval=6),
+ # Current speed breeding needs at least 16 eligible adults. Ages are required
+ # by the production interface; the old fixture predated this explicit input.
+ age<-rep(6L,24);adult_cap<-.10
+ if(kind=='speed') {allowed[17:24,]<-FALSE;age[17:24]<-2L;adult_cap<-.032}
+ z<-withCallingHandlers(optisel_offspring_profile(K,bv,allowed,1500L,Ne,
+   reference_kinship=.20,generation_interval=6,age=age,adult_cap=adult_cap,si_groups=rep(1:12,each=2)),
    warning=function(w){rounding_warnings<<-c(rounding_warnings,conditionMessage(w));invokeRestart('muffleWarning')})
  stopifnot(sum(z$family_sizes)==1500L,all(allowed[z$plan]),all(z$plan[,1]!=z$plan[,2]),
    max(z$metrics$contribution)<=.10+1e-10,z$audit$solver_status==0L,
    identical(z$audit$custom_contribution_refinement,FALSE),
    abs(sum(z$metrics$contribution)-1)<1e-10,
    abs(z$metrics$mate_kinship-weighted.mean(K[z$plan],z$family_sizes))<1e-10)
+ stopifnot(all(z$metrics$contribution[age>=4]<=adult_cap+1e-10),
+           max(tapply(z$metrics$contribution,rep(1:12,each=2),sum))<=.5+1e-10)
+ if(kind=='speed')stopifnot(z$audit$realized_adult_contributors>=16L,
+                           sum(z$metrics$contribution[age<4])<=.5+1e-10)
  n<-z$audit$offspring_counts
  stopifnot(sum(n$n)==3000L,z$audit$optimizer_variables==24L,
    abs(z$metrics$kinship-as.numeric(crossprod(z$metrics$contribution,K%*%z$metrics$contribution)))<1e-10)
@@ -71,4 +79,4 @@ tryCatch({
    cross_plan=matrix(c('A','B','A','C'),ncol=2,byrow=TRUE))
  stopifnot(length(out@id)==10L,identical(state$speed_cross_trace$family_sizes,c(5L,5L)))
 },finally=options(almond.cross_state=previous))
-cat('PASS: native profiles, 10% cap, forbidden edges, impossible margins, variable families and unchanged scalar families.\n')
+cat('PASS: native profiles, individual/adult caps, SI groups, forbidden edges, impossible margins, variable families and unchanged scalar families.\n')
