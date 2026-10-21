@@ -19,7 +19,6 @@ local({
     'predict_genetic_values.R',
     'apply_selection.R',
     'select_parents.R',
-    'advance_cohorts.R',
     'record_results.R',
     'advance_year.R',
     'initialize_pipeline.R',

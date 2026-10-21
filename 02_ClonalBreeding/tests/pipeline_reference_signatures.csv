@@ -1,5 +1,4 @@
 "function_name","ast_md5"
-"redesign_advance","38408db7b4844d51337ab4c363fe1a74"
 "redesign_all_scenarios","186f7caf300e3610d9b196bee608a7c9"
 "redesign_archive_cohorts","7b1c6349f9f355d18fdba39ce7c9228b"
 "redesign_asreml_calibrated","87b7593a1d4b59036acc9b04116cc929"
@@ -35,7 +34,6 @@
 "redesign_timer","77edfc9aee53ebd46a2523a354ab0d5a"
 "redesign_training","4ad90d3abef894825f7c476f91505f23"
 "redesign_training_PT_original","a914dacbc5c3dfc465847910efc99340"
-"redesign_trial_cuts","49f54c49b68c02d01efbf1326024ff5d"
 "redesign_uses_repeated_Y9","c81271f04dc76a37258a1dc083c2a594"
 "redesign_validation_blup","0d21fab41236438645faffd1f41078a5"
 "run_redesigned_schemes","98be4d27729ce5fe16aa4dee44ec0129"

@@ -14,7 +14,7 @@ redesign_worker <- function(job) {
    almond.timing_scenario='initialization',almond.timing_year=0L,
    almond.diagnostic_file=file.path(job$directory,paste0('diagnostics_',job$phase,'.log')))
  install_timers<-function() {
-   for(name in c('redesign_setup','redesign_advance','redesign_measure','redesign_fit',
+   for(name in c('redesign_setup','redesign_measure','redesign_fit',
      'redesign_predict','redesign_choose','redesign_renew','redesign_ocs',
      'randCrossGamSI','redesign_record','redesign_year','redesign_allocate','redesign_measure_parents')) {
      if(exists(name,envir=.GlobalEnv,inherits=FALSE))

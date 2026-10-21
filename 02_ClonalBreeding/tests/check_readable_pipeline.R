@@ -40,14 +40,6 @@ for(alias in names(aliases))stopifnot(identical(
 stopifnot(inherits(try(engine$select_breeding_schemes(root,'not-a-scheme'),silent=TRUE),'try-error'))
 cat('PASS: unique definitions, 18 catalogue entries, and all manuscript aliases.\n')
 
-# Exercise cohort movement with distinguishable objects; updating in-place in
-# the wrong direction would otherwise replace every stage by the same cohort.
-state <- new.env();state$config <- engine$redesign_config()
-state$pop <- setNames(as.list(seq_along(state$config$stages)),state$config$stages)
-previous <- state$pop
-engine$redesign_advance(state)
-stopifnot(is.null(state$pop$F1),identical(state$pop,setNames(previous[-length(previous)],names(previous)[-1])))
-
 # Validation/help must not execute an experiment, and valid CLI options must
 # reach the existing controller with the requested schemes and integer settings.
 spy <- new.env(parent=engine)
@@ -60,7 +52,7 @@ stopifnot(identical(request$schemes,'GS6-E'),request$config$reps==2L,
 for(args in list('--scheme=all',c('--scheme=GS6','--replicates=0'),
                 c('--scheme=GS6','--unknown=1'),c('--scheme=GS6','--scheme=GS9')))
   stopifnot(inherits(try(cli(root,single=TRUE,args=args),silent=TRUE),'try-error'))
-cat('PASS: cohort movement and CLI validation/dispatch without launching simulations.\n')
+cat('PASS: CLI validation/dispatch without launching simulations.\n')
 
 # Nested sourcing must resolve the launcher itself, not the caller's filename.
 # Checking an isolated environment also catches accidental global-only loading.

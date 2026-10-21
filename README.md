@@ -41,6 +41,12 @@ execution. Use `run_scheme.R` for one scheme and `run_experiment.R` for a set
 of schemes. Scheme-specific `00RUNME.R` launchers use the same engine loader,
 `redesigned_schemes.R`.
 
+The annual script shows population replacements explicitly, for example
+`ET3 <- previous ET2`, seedling retention after early selection, and the PT/AT
+trial cuts. Its ten numbered steps follow the breeding year. Technical output
+columns are kept in `R/record_results.R`, so they do not obscure the biological
+sequence. Prediction fitting and OCS remain in dedicated calculation modules.
+
 ```mermaid
 flowchart TD
     Launch["run_scheme.R / run_experiment.R<br/>Choose schemes and replication settings"] --> Load["redesigned_schemes.R<br/>Load the named R/ modules"]

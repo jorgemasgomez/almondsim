@@ -41,18 +41,18 @@ the sequence below. This order preserves which records exist at each decision.
 
 ```mermaid
 flowchart TD
-    Year["Coordinate one year<br/>R/advance_year.R"] --> Age["Advance cohorts by one stage<br/>R/advance_cohorts.R"]
+    Year["Coordinate one year<br/>R/advance_year.R"] --> Age["Replace each stage with the previous year's younger cohort<br/>R/advance_year.R: step 1"]
     Age --> Pending["Activate parents selected last year<br/>R/advance_year.R"]
     Pending --> Predict["Predict seedling breeding values and measure accuracy<br/>R/predict_genetic_values.R"]
-    Predict --> Early["Apply early selection when enabled<br/>R/apply_selection.R"]
+    Predict --> Early["Replace seedlings with the early-selected population<br/>R/advance_year.R: step 3; R/apply_selection.R ranks candidates"]
     Early --> Young["Select parents before their own phenotypes: years 2/4<br/>R/select_parents.R"]
     Young --> Cross["Generate offspring from the current parent allocation<br/>compatible_crosses.R"]
     Cross --> Pheno["Update aggregate phenotypes<br/>R/simulate_phenotypes.R"]
     Pheno --> Archive["Archive evaluated cohorts before trial cuts<br/>R/build_training_population.R"]
     Archive --> Fit["Fit PT and AT decision models<br/>R/fit_prediction_model.R"]
     Fit --> Adult["Select parents for NEXT year: years 6/9<br/>R/select_parents.R"]
-    Adult --> Trials["Apply PT2 and AT3 selection<br/>R/apply_selection.R"]
-    Trials --> Record["Record annual gain, variance, accuracy and audits<br/>R/record_results.R and R/advance_year.R"]
+    Adult --> Trials["Replace PT2 and AT3 with selected individuals<br/>R/advance_year.R: step 9; R/apply_selection.R ranks candidates"]
+    Trials --> Record["Record population summaries and decision audits<br/>R/record_results.R"]
 ```
 
 Important timing details:
@@ -100,18 +100,17 @@ described in [MANUAL_OCS.md](MANUAL_OCS.md).
 | `R/run_replicate.R` | Initialize, burn in, and execute paired scenarios | Replicate seed/job -> records and audits |
 | `R/initialize_pipeline.R` | Import founders and populate initial stages | Founder bank -> mutable simulation state |
 | `R/advance_year.R` | Coordinate the biological annual sequence | State -> updated state and annual record |
-| `R/advance_cohorts.R` | Age all cohorts once | Previous stage populations -> next stages |
 | `R/simulate_phenotypes.R` | Update correlated aggregate evaluations | Genetic values/environment/history -> phenotypes |
 | `R/build_training_population.R` | Archive and choose decision cohorts | Evaluated cohorts -> PT or PT+AT training |
 | `R/fit_prediction_model.R` | Fit decision-specific models | Training data -> model/predictions and diagnostics |
 | `R/predict_genetic_values.R` | Predict candidate breeding values | Candidates/model -> scored candidates |
-| `R/apply_selection.R` | Apply rank-based early and trial selection | Scored population -> retained individuals |
+| `R/apply_selection.R` | Rank and retain individuals when called by the annual script | Scored population -> retained individuals |
 | `R/select_parents.R` | Choose parents or dispatch OCS | Existing/incoming parents -> allocation |
 | `optimize_contributions.R` | Translate almond biology to OCS inputs | Candidate pool -> validated OCS allocation |
 | `ocs_discrete.R` | Coancestry and compatibility calculations | Genotypes -> K, compatibility, metrics |
 | `ocs_optisel.R` | Native optimization, counts and mating assignment | Constraints/BVs/K -> counts and mating plan |
 | `compatible_crosses.R` | Generate compatible offspring | Parents/plan -> F1 population |
-| `R/record_results.R` | Summarize stages and combine records | Populations/records -> annual data frames |
+| `R/record_results.R` | Summarize stages, format decision audits and combine records | Populations/decisions -> annual data frames |
 | `R/runtime_diagnostics.R` | Timing, diagnostics and output checks | Tasks/conditions -> external logs |
 | `plot_manuscript.R` | Produce manuscript plots/statistics | Completed run -> figures and analysis files |
 | `analysis/export_pedigree.R` | Optional pedigree export | Saved pedigree -> CSV |

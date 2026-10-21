@@ -9,7 +9,7 @@ All paths below are relative to `02_ClonalBreeding/`.
    The former contains the scientific catalogue; the latter maps manuscript
    labels such as `GS6-E` onto stable scenario IDs. `GlobalParameters.R` in each
    scheme directory remains a catalogue validation input.
-2. **Follow one year:** `R/advance_year.R`, starting at numbered comments 1-9.
+2. **Follow one year:** `R/advance_year.R`, starting at numbered comments 1-10.
    Check whether each decision uses previous or current evaluations and whether
    newly chosen parents are used immediately or in the following year.
 3. **Check phenotypes:** `R/simulate_phenotypes.R`. Review annual environmental
@@ -28,7 +28,7 @@ All paths below are relative to `02_ClonalBreeding/`.
 | Review question | Read here |
 | --- | --- |
 | What differs between PH9, GS6-E and SB2-OG? | `R/simulation_parameters.R`: `redesign_scenarios()` |
-| When are cohorts aged and when are parents crossed? | `R/advance_year.R`, `R/advance_cohorts.R` |
+| When are cohorts aged and when are parents crossed? | `R/advance_year.R`: explicit replacements in steps 1 and 5 |
 | Is seedling accuracy measured before early selection? | `R/advance_year.R`: step 3 |
 | Which observations train each selection decision? | `R/build_training_population.R` |
 | Where is the calibrated repeated PT/AT covariance applied? | `R/fit_prediction_model.R`: `redesign_calibrated_residual()`, `redesign_native_repeated_gs()`, `redesign_asreml_calibrated()` |
@@ -77,13 +77,14 @@ select_breeding_schemes(root, 'GS6-E') # inspect settings; no run
 ```sh
 Rscript 02_ClonalBreeding/tests/check_readable_pipeline.R
 Rscript 02_ClonalBreeding/tests/check_ne_configuration.R
+Rscript 02_ClonalBreeding/tests/check_annual_cycle.R
 Rscript 02_ClonalBreeding/tests/check_ocs_native_offspring.R
 ```
 
-The first check compares the executable syntax of 39 unchanged functions
+The first check compares the executable syntax of 37 unchanged functions
 against signatures captured from commit
 `da0f9c8c2e7b46e10b972f84e4690229549d882e` before reorganization. It also checks
-unique module definitions, scheme aliases, cohort movement, CLI dispatch,
+unique module definitions, scheme aliases, CLI dispatch,
 source-freeze checksums and module loading in a separate R worker.
 Comments, whitespace and function source locations do not affect the signatures.
 The experiment controller has one intentional operational change: freezing the
@@ -99,6 +100,15 @@ is the executable catalogue; there is no separately maintained JSON copy.
 
 The optional `analysis/export_pedigree.R` utility exports a saved pedigree to
 CSV. It does not participate in simulation execution.
+
+The annual-cycle check compares 40 controlled cases with a reference captured
+before rewriting the coordinator from commit
+`93323f0d1873eafd8e78234f9c93065708e014d3`. It checks population state, annual
+output rows, call order and random-number state, including cached/initial models
+for all 18 schemes and initialization with recording/renewal enabled or disabled.
+Prediction and crossing use test doubles: this is an orchestration regression
+check, not a new numerical validation of those algorithms. The compact reference
+hashes are in `tests/annual_cycle_reference.csv`.
 
 The final check exercises the current OCS allocation and crossing fixtures.
 These checks do not launch breeding replicates and do not require an ASReml
