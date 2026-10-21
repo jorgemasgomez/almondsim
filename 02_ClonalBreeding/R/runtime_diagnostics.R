@@ -1,14 +1,14 @@
 # Provide timing, storage checks, diagnostics and failure isolation. Timing is inclusive: never sum a parent task with its nested tasks.
-# Public function names are retained for existing launchers and saved workflows.
+# Function names describe each operation; all launchers use this shared implementation.
 
 # Capture an individual failure as an outcome so unrelated scenarios can continue.
-redesign_attempt_scenario <- function(action) {
+capture_scenario_outcome <- function(action) {
  tryCatch(list(ok=TRUE,result=action()),error=function(e)
    list(ok=FALSE,error=conditionMessage(e)))
 }
 
 # Resolve external output storage and refuse paths inside the source repository.
-redesign_data_dir <- function(root,config=list()) {
+resolve_data_directory <- function(root,config=list()) {
   configured <- config$data_dir
   if(is.null(configured) || !nzchar(configured)) configured <- Sys.getenv('ALMONDSIM_DATA_DIR',unset='')
   if(!nzchar(configured)) configured <- file.path(dirname(dirname(normalizePath(root,winslash='/',mustWork=TRUE))),'almondsim_data')
@@ -23,7 +23,7 @@ redesign_data_dir <- function(root,config=list()) {
 }
 
 # Wrap a task with inclusive timing and diagnostics, preserving the returned result or raised error.
-redesign_timer <- function(original,label) {
+time_pipeline_task <- function(original,label) {
   force(original);force(label)
   function(...) {
     started <- Sys.time(); cpu <- proc.time(); success <- FALSE
@@ -36,7 +36,7 @@ redesign_timer <- function(original,label) {
           task=label,started=format(started,'%Y-%m-%dT%H:%M:%S%z'),
           elapsed_seconds=unname(duration['elapsed']),
           cpu_seconds=unname(duration['user.self']+duration['sys.self']),success=success)
-        memory <- redesign_memory()
+        memory <- read_process_memory()
         row$working_set_gb <- memory$working_set_gb
         row$private_gb <- memory$private_gb
         row$peak_private_gb <- memory$peak_private_gb
@@ -46,14 +46,14 @@ redesign_timer <- function(original,label) {
       }
     },add=TRUE)
     result <- withCallingHandlers(original(...),
-      warning=function(w) redesign_diagnostic(label,'warning',w),
-      error=function(e) redesign_diagnostic(label,'error',e))
+      warning=function(w) log_pipeline_condition(label,'warning',w),
+      error=function(e) log_pipeline_condition(label,'error',e))
     success <- TRUE;result
   }
 }
 
 # Check the licensed pedigree solver in a separate process before scheduling pedigree fits.
-redesign_check_asreml <- function() {
+check_asreml_license <- function() {
   # A separate preflight process releases its license before pedigree starts.
   script <- tempfile(fileext='.R');on.exit(unlink(script),add=TRUE)
   libraries <- paste(capture.output(dput(.libPaths())),collapse='')
@@ -67,7 +67,7 @@ redesign_check_asreml <- function() {
 }
 
 # Read process memory metrics when available; return missing metrics if the optional ps package is absent.
-redesign_memory <- function() {
+read_process_memory <- function() {
   result <- list(working_set_gb=NA_real_,private_gb=NA_real_,peak_private_gb=NA_real_)
   if(requireNamespace('ps',quietly=TRUE)) {
     memory <- tryCatch(ps::ps_memory_info(),error=function(e) NULL)
@@ -81,12 +81,12 @@ redesign_memory <- function() {
 }
 
 # Write a condition, call stack and memory snapshot to the configured diagnostic log.
-redesign_diagnostic <- function(task,kind,condition) {
+log_pipeline_condition <- function(task,kind,condition) {
   destination <- getOption('almond.diagnostic_file')
   if(is.null(destination)) return(invisible(NULL))
   report <- c(paste(format(Sys.time(),'%Y-%m-%dT%H:%M:%S%z'),kind,task),
     conditionMessage(condition),paste('Call:',paste(deparse(conditionCall(condition)),collapse=' ')),
-    paste('Memory:',paste(names(redesign_memory()),unlist(redesign_memory()),collapse='; ')),
+    paste('Memory:',paste(names(read_process_memory()),unlist(read_process_memory()),collapse='; ')),
     'Call stack:',vapply(sys.calls(),function(x) paste(deparse(x),collapse=' '),character(1)))
   tryCatch(cat(paste(report,collapse='\n'),'\n',file=destination,append=TRUE),
     error=function(e) cat('Diagnostic:',conditionMessage(condition),'\n'))

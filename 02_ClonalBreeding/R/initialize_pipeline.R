@@ -1,8 +1,8 @@
 # Validate and import the founder bank, initialize shared state, and fill the pipeline before burn-in.
-# Public function names are retained for existing launchers and saved workflows.
+# Function names describe each operation; all launchers use this shared implementation.
 
 # Locate a completed 150-diploid, eight-chromosome bank and reject incomplete or incompatible inputs.
-redesign_founder_bank <- function(bank_root) {
+find_founder_bank <- function(bank_root) {
   paths <- list.files(bank_root,pattern='^run_',full.names=TRUE)
   paths <- paths[dir.exists(paths)]
   if(file.exists(file.path(bank_root,'manifest.json'))) paths <- c(bank_root,paths)
@@ -24,20 +24,20 @@ redesign_founder_bank <- function(bank_root) {
 }
 
 # Validate the required founder parent count after pipeline initialization; do not invent additional parents.
-redesign_fill_parent_pool <- function(state) {
+validate_founder_parent_pool <- function(state) {
  if(nInd(state$parents)!=state$config$parents) stop('The revised design requires exactly 32 sampled founders, not a legacy pool.')
  invisible(state)
 }
 
 # Initialize AlphaSimR globals and state, then perform fill cycles without parental renewal.
-redesign_setup <- function(root,config) {
+initialize_breeding_pipeline <- function(root,config) {
   # Reuse validated founder import and S-locus assignment from the original program.
   source(file.path(root,'00_Burn_in','GlobalParameters.R'),local=.GlobalEnv)
   source(file.path(root,'compatible_crosses.R'),local=.GlobalEnv)
   source(file.path(root,'ocs_discrete.R'),local=.GlobalEnv)
   source(file.path(root,'optimize_contributions.R'),local=.GlobalEnv)
   if(!identical(config$founder_source,'bank150')) stop('The revised design requires the bank150/60000 founder source.')
-  bank <- redesign_founder_bank(config$founder_bank)
+  bank <- find_founder_bank(config$founder_bank)
   founder_count <- config$parents
   assign('nParents',founder_count,envir=.GlobalEnv)
   options(almond.haplotype_dir=bank,almond.founder_count=founder_count)
@@ -53,7 +53,7 @@ redesign_setup <- function(root,config) {
   state$reference_gxe_variance <- initVarGE
   state$annual_evaluations <- new.env(parent=emptyenv())
   environment_seed <- if(is.null(config$environment_seed)) config$seed+900000L else config$environment_seed
-  state$environment_p <- redesign_environment_schedule(config,environment_seed)
+  state$environment_p <- create_environment_schedule(config,environment_seed)
   state$errors <- new.env(parent=emptyenv())
   state$parents <- Parents
   state$birth <- setNames(rep(-30L,nInd(Parents)),as.character(Parents@id))
@@ -65,12 +65,12 @@ redesign_setup <- function(root,config) {
   state$model_method <- NULL
   state$model_training_stage <- NULL
   state$year <- -config$fill_cycles
-  state$parents <- redesign_measure(state$parents,'Parents',state)
+  state$parents <- update_phenotypes(state$parents,'Parents',state)
   for(i in seq_len(config$fill_cycles)) {
     state$year <- i-config$fill_cycles
-    redesign_year(state,'Pheno',9L,0L,record=FALSE,renew=FALSE)
+    advance_breeding_year(state,'Pheno',9L,0L,record=FALSE,renew=FALSE)
   }
-  redesign_fill_parent_pool(state)
+  validate_founder_parent_pool(state)
   state
 }
 

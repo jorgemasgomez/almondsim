@@ -1,13 +1,13 @@
 # Freeze source files and coordinate replicate workers. Pedigree processing remains serial within the existing execution policy.
-# Public function names are retained for existing launchers and saved workflows.
+# Function names describe each operation; all launchers use this shared implementation.
 
 # Start a new experiment only when explicitly called. Sourcing the module does not start a run.
-run_redesigned_schemes <- function(root,config=redesign_config(),scenarios=redesign_scenarios()) {
+coordinate_breeding_experiment <- function(root,config=breeding_config(),scenarios=breeding_scenarios()) {
  experiment_start<-proc.time()[['elapsed']]
  original_root<-normalizePath(root,winslash='/',mustWork=TRUE)
  if(!identical(config$founder_source,'bank150')) stop('The revised design requires bank150.')
- redesign_founder_bank(config$founder_bank)
- config$data_dir<-redesign_data_dir(original_root,config)
+ find_founder_bank(config$founder_bank)
+ config$data_dir<-resolve_data_directory(original_root,config)
  if(is.null(config$asreml_workspace)) config$asreml_workspace<-'16gb'
  parent<-file.path(config$data_dir,'manuscript_runs')
  dir.create(parent,recursive=TRUE,showWarnings=FALSE)
@@ -37,7 +37,7 @@ run_redesigned_schemes <- function(root,config=redesign_config(),scenarios=redes
  cluster<-parallel::makeCluster(min(config$workers,config$reps),outfile=file.path(run,'cluster.log'))
  on.exit(parallel::stopCluster(cluster),add=TRUE)
  results<-parallel::parLapplyLB(cluster,jobs,function(job) {
-   .libPaths(job$libraries);source(file.path(job$root,'redesigned_schemes.R'));redesign_worker(job)
+   .libPaths(job$libraries);source(file.path(job$root,'redesigned_schemes.R'));run_replicate_job(job)
  })
  # Scheme failures do not stop unrelated schemes, replicates or pedigree.
  jsonlite::write_json(list(status='running',phase='pedigree',replicates=config$reps,
@@ -46,12 +46,12 @@ run_redesigned_schemes <- function(root,config=redesign_config(),scenarios=redes
  for(rep in seq_len(config$reps)) {
    job<-jobs[[rep]];job$methods<-'Pedigree';job$phase<-'pedigree'
    pedigree[[rep]]<-parallel::parLapply(cluster[1],list(job),function(job) {
-     .libPaths(job$libraries);source(file.path(job$root,'redesigned_schemes.R'));redesign_worker(job)
+     .libPaths(job$libraries);source(file.path(job$root,'redesigned_schemes.R'));run_replicate_job(job)
    })[[1]]
  }
  outcomes<-c(results,pedigree)
- combined<-redesign_bind(lapply(outcomes,function(x) x$result))
- statuses<-redesign_bind(lapply(outcomes,function(x) x$scenario_status))
+ combined<-bind_result_rows(lapply(outcomes,function(x) x$result))
+ statuses<-bind_result_rows(lapply(outcomes,function(x) x$scenario_status))
  fatal<-Filter(function(x) !isTRUE(x$ok),outcomes)
  complete<-!length(fatal)&&(nrow(scenarios)==0L || (!is.null(statuses)&&
    all(statuses$status=='complete')&&nrow(statuses)==config$reps*nrow(scenarios)))

@@ -1,8 +1,8 @@
 # Fit phenotypic, pedigree and genomic decision models. Explicit PT-only implementations support calibrated repeated PT/AT models in year-9 schemes.
-# Public function names are retained for existing launchers and saved workflows.
+# Function names describe each operation; all launchers use this shared implementation.
 
 # Fit native AlphaSimR RRBLUP to the PT-only training set and attach cohort diagnostics.
-redesign_native_rrblup <- function(train,state) {
+fit_native_rrblup <- function(train,state) {
   if(any(train@misc$training_record_stage!='PT')) stop('GS training must contain only original PT records.')
   model <- AlphaSimR::RRBLUP(train,simParam=SP)
   attr(model,'training_diagnostics') <- list(solver='AlphaSimR::RRBLUP',
@@ -12,7 +12,7 @@ redesign_native_rrblup <- function(train,state) {
 }
 
 # Reject a decision model with the wrong anchor or missing candidate own PT records.
-redesign_assert_decision_training <- function(pop,model,anchor) {
+validate_decision_training <- function(pop,model,anchor) {
   if(is.null(pop)) return(invisible(TRUE))
   meta <- attr(model,'decision_training')
   if(is.null(meta) || !identical(meta$anchor,anchor) ||
@@ -22,14 +22,14 @@ redesign_assert_decision_training <- function(pop,model,anchor) {
 }
 
 # Select the PT-only decision anchor without changing model timing.
-redesign_fit_for_stage_PT_original <- function(state,method,anchor) {
+fit_pt_model_for_stage <- function(state,method,anchor) {
   if(method=='Pheno') return(NULL)
   if(!anchor %in% c('PT2','AT3')) stop('Unsupported decision training anchor.')
   old_anchor <- state$training_cohort_stage;old_stage <- state$training_stage
   on.exit({state$training_cohort_stage<-old_anchor;state$training_stage<-old_stage},add=TRUE)
   state$training_cohort_stage <- anchor;state$training_stage <- 'PT2'
-  model <- redesign_fit(state,method,state$pop[[anchor]])
-  train <- redesign_training(state,NULL,anchor=anchor)
+  model <- fit_prediction_model(state,method,state$pop[[anchor]])
+  train <- build_training_population(state,NULL,anchor=anchor)
   meta <- list(anchor=anchor,ids=as.character(train@id),
     cohort_keys=unique(train@misc$training_record_cohort),
     record_years=train@fixEff,PT_records=nInd(train),AT_records=0L,
@@ -45,15 +45,15 @@ redesign_fit_for_stage_PT_original <- function(state,method,anchor) {
 }
 
 # Fit the PT-only model. Year-9 dispatch may call the calibrated repeated-record implementation instead.
-redesign_fit_PT_original <- function(state,method,candidates) {
+fit_pt_prediction_model <- function(state,method,candidates) {
   if (method=='Pheno') return(NULL)
-  train <- redesign_training(state,candidates)
-  if (method=='GS') return(redesign_native_rrblup(train,state))
+  train <- build_training_population(state,candidates)
+  if (method=='GS') return(fit_native_rrblup(train,state))
   if (identical(getOption('almond.pedigree_solver','asreml'),'validation')) {
-    return(redesign_validation_blup(state,train))
+    return(fit_validation_pedigree_blup(state,train))
   }
   if (!requireNamespace('asreml',quietly=TRUE)) stop('Pedigree requires ASReml.')
-  prediction <- redesign_merge_latest(c(list(train,state$parents),state$pop))
+  prediction <- merge_latest_populations(c(list(train,state$parents),state$pop))
   ped <- data.frame(id=as.character(seq_len(SP$lastId)),
                     dam=as.character(SP$pedigree[,1]),sire=as.character(SP$pedigree[,2]))
   ped$dam[ped$dam=='0'] <- NA
@@ -92,7 +92,7 @@ redesign_fit_PT_original <- function(state,method,candidates) {
 }
 
 # Provide the explicit validation-only pedigree solver; production pedigree uses ASReml.
-redesign_validation_blup <- function(state,train) {
+fit_validation_pedigree_blup <- function(state,train) {
   size <- SP$lastId
   if(size>3000) stop('Validation solver is limited to small fixtures; use ASReml for the experiment.')
   relationship <- matrix(0,size,size)
@@ -119,19 +119,19 @@ redesign_validation_blup <- function(state,train) {
 }
 
 # Build the pedigree repeated-record fit with the same cohort and residual design as genomic prediction.
-redesign_fit_repeated_pedigree <- function(state,method,candidates) {
+fit_pt_at_pedigree_model <- function(state,method,candidates) {
   if(method=='Pheno')return(NULL)
   if(method!='Pedigree')stop('Repeated pedigree fitter requires method Pedigree.')
-  if(state$training_cohort_stage=='PT2')return(redesign_fit_PT_original(state,method,candidates))
-  train <- redesign_training(state,candidates)
-  records <- redesign_repeated_records(train)
-  prediction <- redesign_merge_latest(c(list(train,state$parents),state$pop))
-  frame <- redesign_repeated_frame(records,prediction)
+  if(state$training_cohort_stage=='PT2')return(fit_pt_prediction_model(state,method,candidates))
+  train <- build_training_population(state,candidates)
+  records <- build_pt_at_records(train)
+  prediction <- merge_latest_populations(c(list(train,state$parents),state$pop))
+  frame <- build_pedigree_record_frame(records,prediction)
   ped <- data.frame(id=as.character(seq_len(SP$lastId)),dam=as.character(SP$pedigree[,1]),sire=as.character(SP$pedigree[,2]))
   ped$dam[ped$dam=='0']<-NA;ped$sire[ped$sire=='0']<-NA
   inverse <- asreml::ainverse(ped)
   asreml::asreml.options(trace=FALSE,workspace=getOption('almond.asreml_workspace','16gb'))
-  model <- redesign_asreml_calibrated(state,frame,inverse)
+  model <- fit_calibrated_asreml(state,frame,inverse)
   stable <- function(fit) {
     if(!isTRUE(fit$converge))return(FALSE)
     vc<-summary(fit)$varcomp
@@ -156,7 +156,7 @@ redesign_fit_repeated_pedigree <- function(state,method,candidates) {
   if(length(rPT)!=1L||length(rAT)!=1L||length(rCov)!=1L)stop('Cannot identify the repeated residual covariance components.')
   R<-matrix(c(rPT,rCov,rCov,rAT),2,2,dimnames=list(c('PT','AT'),c('PT','AT')))
   if(any(!is.finite(R))||min(eigen(R,symmetric=TRUE,only.values=TRUE)$values)<=0)stop('Repeated residual matrix is not positive definite.')
-  calibration <- redesign_calibrated_residual(state)
+  calibration <- calculate_pt_at_residual_covariance(state)
   if(max(abs(R/R[1,1]-calibration$relative_matrix))>1e-7)stop('Pedigree residual ratios differ from the prespecified GS calibration.')
   attr(values,'training_diagnostics')<-list(solver='ASReml',heterogeneous=TRUE,repeated_residual=TRUE,
     residual_structure='id(Ind):us(Stage) constrained shape',residual_shape_source='design_calibrated',calibration=calibration,observed_records=nrow(records),unique_individuals=length(unique(records$id)),
@@ -167,14 +167,14 @@ redesign_fit_repeated_pedigree <- function(state,method,candidates) {
 }
 
 # Fit and audit the model for one selection anchor, dispatching PT-only or year-9 repeated records.
-redesign_fit_for_stage <- function(state,method,anchor) {
+fit_decision_model <- function(state,method,anchor) {
   if(method=='Pheno')return(NULL)
-  if(!redesign_uses_repeated_Y9(state))return(redesign_fit_for_stage_PT_original(state,method,anchor))
+  if(!uses_pt_at_records(state))return(fit_pt_model_for_stage(state,method,anchor))
   old_anchor<-state$training_cohort_stage;old_stage<-state$training_stage
   on.exit({state$training_cohort_stage<-old_anchor;state$training_stage<-old_stage},add=TRUE)
   state$training_cohort_stage<-anchor;state$training_stage<-'PT2'
-  model<-redesign_fit(state,method,state$pop[[anchor]])
-  train<-redesign_training(state,NULL,anchor=anchor);records<-redesign_repeated_records(train)
+  model<-fit_prediction_model(state,method,state$pop[[anchor]])
+  train<-build_training_population(state,NULL,anchor=anchor);records<-build_pt_at_records(train)
   meta<-list(anchor=anchor,ids=as.character(train@id),cohort_keys=unique(records$cohort),
     record_ids=records$id,record_years=records$record_year,record_stages=records$stage,records=records,
     PT_records=sum(records$stage=='PT'),AT_records=sum(records$stage=='AT'),total_records=nrow(records),
@@ -189,7 +189,7 @@ redesign_fit_for_stage <- function(state,method,anchor) {
 }
 
 # Return the prespecified PT/AT relative residual covariance from the simulation error design.
-redesign_calibrated_residual <- function(state) {
+calculate_pt_at_residual_covariance <- function(state) {
   A <- state$reference_variance
   GE <- state$reference_gxe_variance
   stages <- c('PT2','AT1','AT2','AT3')
@@ -197,7 +197,7 @@ redesign_calibrated_residual <- function(state) {
   total <- A*(1/state$config$h2[stages]-1)
   pure <- as.numeric(total-GE/durations)
   stopifnot(all(is.finite(pure)),all(pure>0))
-  # Match redesign_error_step at EACH intermediate annual aggregate. Marginal
+  # Match update_correlated_error at EACH intermediate annual aggregate. Marginal
   # pure error increases from AT1 to AT3 because the GE/n budget decreases.
   pure_cov <- pure[1]
   for(j in 2:4) pure_cov <- pure_cov*min(pure[j-1],pure[j])/pure[j-1]
@@ -216,10 +216,10 @@ redesign_calibrated_residual <- function(state) {
 }
 
 # Whiten repeated responses and designs, fit solveRRBLUP, and validate its normal equations.
-redesign_native_repeated_gs <- function(state,train) {
-  records <- redesign_repeated_records(train)
+fit_pt_at_genomic_model <- function(state,train) {
+  records <- build_pt_at_records(train)
   is_at <- records$stage=='AT'
-  prediction <- redesign_merge_latest(c(list(train,state$parents),state$pop))
+  prediction <- merge_latest_populations(c(list(train,state$parents),state$pop))
   genotype_train <- AlphaSimR::pullSnpGeno(train,simParam=SP)-1
   positions <- match(records$id,as.character(train@id))
   stopifnot(!anyNA(positions))
@@ -227,7 +227,7 @@ redesign_native_repeated_gs <- function(state,train) {
   X <- model.matrix(~factor(record_year),data=records)
   y <- matrix(records$pheno,ncol=1)
   stopifnot(qr(X)$rank==ncol(X),all(is.finite(y)),all(is.finite(M)))
-  calibration <- redesign_calibrated_residual(state)
+  calibration <- calculate_pt_at_residual_covariance(state)
   R <- calibration$relative_matrix
   # PT rows have unit relative variance. Whiten each observed AT conditional
   # on its original PT: eAT - cov/PTvar * ePT, then divide by conditional SD.
@@ -270,8 +270,8 @@ redesign_native_repeated_gs <- function(state,train) {
 }
 
 # Constrain ASReml's PT/AT residual parameters to a shared scale and fixed relative covariance.
-redesign_asreml_calibrated <- function(state,frame,inverse) {
-  calibration <- redesign_calibrated_residual(state)
+fit_calibrated_asreml <- function(state,frame,inverse) {
+  calibration <- calculate_pt_at_residual_covariance(state)
   R <- calibration$relative_matrix
   initial <- asreml::asreml(fixed=Pheno~1+Year,random=~vm(Ind,inverse),
     residual=~id(Ind):us(Stage),na.action=asreml::na.method(y='include'),data=frame,start.values=TRUE)
@@ -293,9 +293,9 @@ redesign_asreml_calibrated <- function(state,frame,inverse) {
 }
 
 # Dispatch to PT-only, repeated genomic, or repeated pedigree prediction without changing candidate timing.
-redesign_fit <- function(state,method,candidates) {
-  if(!redesign_uses_repeated_Y9(state)||method=='Pheno')return(redesign_fit_PT_original(state,method,candidates))
-  if(method=='GS')return(redesign_native_repeated_gs(state,redesign_training(state,candidates)))
-  redesign_fit_repeated_pedigree(state,method,candidates)
+fit_prediction_model <- function(state,method,candidates) {
+  if(!uses_pt_at_records(state)||method=='Pheno')return(fit_pt_prediction_model(state,method,candidates))
+  if(method=='GS')return(fit_pt_at_genomic_model(state,build_training_population(state,candidates)))
+  fit_pt_at_pedigree_model(state,method,candidates)
 }
 

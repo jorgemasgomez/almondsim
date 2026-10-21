@@ -82,3 +82,4 @@ vignettes/*.pdf
 # Small source-regression fixture; not generated simulation output.
 !02_ClonalBreeding/tests/pipeline_reference_signatures.csv
 !02_ClonalBreeding/tests/annual_cycle_reference.csv
+!02_ClonalBreeding/tests/function_renames.csv

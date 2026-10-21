@@ -1,8 +1,8 @@
 # Build current Ne-based OCS inputs from the almond candidate pool and validate allocation.
 # Contributions are optimized natively; no manual repair or alternative optimizer is used.
 source(file.path(getOption('almond.input_dir'),'ocs_optisel.R'),local=.GlobalEnv)
-redesign_ocs <- function(state,candidates,model) {
- pool<-redesign_predict(redesign_merge_latest(list(state$parents,candidates)),'GS',model)
+optimize_parent_contributions <- function(state,candidates,model) {
+ pool<-predict_breeding_values(merge_latest_populations(list(state$parents,candidates)),'GS',model)
  stopifnot(isTRUE(all.equal(state$config$ocs_max_contribution,.10)))
  bv<-as.numeric(ebv(pool));K<-ocs_kinship(pool,state$ocs_frequency)
  use_year<-state$year+if(isTRUE(state$config$first_parental_use>=6L)) 1L else 0L

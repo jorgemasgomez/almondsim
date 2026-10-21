@@ -1,8 +1,8 @@
 # Record annual outcomes by population stage and combine records with compatible columns.
-# Public function names are retained for existing launchers and saved workflows.
+# Function names describe each operation; all launchers use this shared implementation.
 
 # Record population sizes, genetic means, genetic variances and selection accuracies for the current year.
-redesign_record <- function(state,scenario,rep,accuracy,entrants,parent_stage) {
+summarize_annual_populations <- function(state,scenario,rep,accuracy,entrants,parent_stage) {
  row <- list(year=state$year,rep=rep,scenario=scenario,accSel=accuracy,
              accParents=state$parent_accuracy,newParents=entrants,parentSelectionStage=parent_stage)
  for(stage in c('Parents',state$config$stages)) {
@@ -18,7 +18,7 @@ redesign_record <- function(state,scenario,rep,accuracy,entrants,parent_stage) {
 }
 
 # Combine annual/status frames while preserving all columns when some records lack a field.
-redesign_bind <- function(frames) {
+bind_result_rows <- function(frames) {
  frames<-Filter(function(x) !is.null(x)&&nrow(x)>0L,frames)
  if(!length(frames)) return(NULL)
  columns<-unique(unlist(lapply(frames,names)))
@@ -32,11 +32,11 @@ redesign_bind <- function(frames) {
 # Technical output fields are kept here so advance_year.R follows the biology.
 # These inputs are the decisions already made by the annual cycle. Recording
 # does not choose parents, fit a new model or perform additional selection.
-redesign_record_year <- function(state, config, method, first, rep, accuracy,
+record_annual_results <- function(state, config, method, first, rep, accuracy,
                                 entrants, target, allocation, next_selection,
                                 ocs_solution, candidates, seedlings_before) {
  scenario <- if(!is.null(config$scenario_id)) config$scenario_id else paste0(method,'_Y',first)
- row <- redesign_record(state,scenario,rep,accuracy,entrants,target)
+ row <- summarize_annual_populations(state,scenario,rep,accuracy,entrants,target)
  row$ocsMaxContribution <- if(!isTRUE(config$ocs_enabled)) NA_real_ else config$ocs_max_contribution
  row$firstParentalUse <- first
  row$parentCandidateAge <- if(first>=6L) first-1L else first
@@ -46,7 +46,7 @@ redesign_record_year <- function(state, config, method, first, rep, accuracy,
  row$selectedForNextYear <- if(is.null(next_selection)) 0L else next_selection$new
  row$trialCutStage <- 'PT2';row$eliteCutStage <- 'AT3'
  row$predictionSolver <- if(method=='GS') if(first==9L) 'AlphaSimR::solveRRBLUP' else 'AlphaSimR::RRBLUP' else if(method=='Pedigree') 'ASReml' else NA_character_
- row$trainingPTRecords <- if(method=='Pheno') NA_integer_ else sum(redesign_training(state,candidates)@misc$training_record_stage=='PT')
+ row$trainingPTRecords <- if(method=='Pheno') NA_integer_ else sum(build_training_population(state,candidates)@misc$training_record_stage=='PT')
  row$trainingATRecords <- if(method=='Pheno') NA_integer_ else if(first==9L) 75L else 0L
  row$trainingCohortAnchor <- if(method=='Pheno') NA_character_ else state$training_cohort_stage
  row$annualEnvironmentP <- state$environment_p[[as.character(state$year)]]
@@ -62,7 +62,7 @@ redesign_record_year <- function(state, config, method, first, rep, accuracy,
  row$residualShape <- if(method=='Pheno') NA_character_ else if(first==9L) 'design_calibrated_PT_AT' else 'common_PT'
  row$ownPTRecordsValidated <- method!='Pheno'
  row$trainingCohorts <- if(method=='Pheno') NA_integer_ else min(state$config$training_cohorts,length(state$stage_history[[state$training_cohort_stage]]))
- row$trainingIndividuals <- if(method=='Pheno') NA_integer_ else nInd(redesign_training(state,candidates))
+ row$trainingIndividuals <- if(method=='Pheno') NA_integer_ else nInd(build_training_population(state,candidates))
  row$earlySelection <- isTRUE(config$early_selection)
  row$progenyPerCross <- if(is.null(ocs_solution)) config$progeny else NA_integer_
  row$variableFamilySizes <- !is.null(ocs_solution)

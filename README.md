@@ -151,7 +151,7 @@ The founder bank must match the expected format: a completed manifest, 150 diplo
 
 ## Running an experiment
 
-Run the following from the repository root after installing the dependencies and preparing founder inputs. Calling `run_redesigned_schemes()` starts a new experiment; sourcing the engine only defines its functions.
+Run the following from the repository root after installing the dependencies and preparing founder inputs. Calling `coordinate_breeding_experiment()` starts a new experiment; sourcing the engine only defines its functions.
 
 ```r
 Sys.setenv(
@@ -162,15 +162,15 @@ Sys.setenv(
 root <- normalizePath("02_ClonalBreeding", winslash = "/")
 source(file.path(root, "redesigned_schemes.R"))
 
-config <- redesign_config()
+config <- breeding_config()
 config$reps <- 10L
 config$workers <- 4L
 config$threads <- 6L
 
-scenarios <- redesign_all_scenarios(root)
+scenarios <- all_breeding_scenarios(root)
 
 
-run <- run_redesigned_schemes(root, config, scenarios)
+run <- coordinate_breeding_experiment(root, config, scenarios)
 
 source(file.path(root, "plot_results.R"))
 plot_experiment(run$run_dir)

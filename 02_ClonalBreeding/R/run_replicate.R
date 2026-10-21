@@ -1,8 +1,8 @@
 # Fill and burn in one replicate, then run its selected scenarios from paired starting states. A failed scenario is recorded; other scenarios continue.
-# Public function names are retained for existing launchers and saved workflows.
+# Function names describe each operation; all launchers use this shared implementation.
 
 # Execute one replicate job, retaining partial results, error messages and frozen-code provenance.
-redesign_worker <- function(job) {
+run_replicate_job <- function(job) {
  .libPaths(job$libraries)
  options(almond.input_dir=job$root,almond.nThreads=job$config$threads)
  source(file.path(job$root,'redesigned_schemes.R'),local=.GlobalEnv)
@@ -14,38 +14,38 @@ redesign_worker <- function(job) {
    almond.timing_scenario='initialization',almond.timing_year=0L,
    almond.diagnostic_file=file.path(job$directory,paste0('diagnostics_',job$phase,'.log')))
  install_timers<-function() {
-   for(name in c('redesign_setup','redesign_measure','redesign_fit',
-     'redesign_predict','redesign_choose','redesign_renew','redesign_ocs',
-     'randCrossGamSI','redesign_record','redesign_year','redesign_allocate','redesign_measure_parents')) {
+   for(name in c('initialize_breeding_pipeline','update_phenotypes','fit_prediction_model',
+     'predict_breeding_values','select_best_individuals','renew_parent_pool','optimize_parent_contributions',
+     'randCrossGamSI','summarize_annual_populations','advance_breeding_year','select_parent_allocation','update_parent_phenotypes')) {
      if(exists(name,envir=.GlobalEnv,inherits=FALSE))
-       assign(name,redesign_timer(get(name,envir=.GlobalEnv),name),envir=.GlobalEnv)
+       assign(name,time_pipeline_task(get(name,envir=.GlobalEnv),name),envir=.GlobalEnv)
    }
  }
  status_file<-file.path(job$directory,paste0('progress_',job$phase,'.json'))
  progress<-function(status,scenario,year=0L,error=NULL) {
    options(almond.timing_scenario=scenario,almond.timing_year=year)
    jsonlite::write_json(list(status=status,rep=job$rep,phase=job$phase,
-     scenario=scenario,year=year,memory=redesign_memory(),
+     scenario=scenario,year=year,memory=read_process_memory(),
      updated=format(Sys.time(),'%Y-%m-%dT%H:%M:%S%z'),error=error),
      status_file,pretty=TRUE,auto_unbox=TRUE)
  }
  log<-file(file.path(job$directory,paste0('execution_',job$phase,'.log')),'wt')
  sink(log);on.exit({sink();close(log)},add=TRUE)
  base_file<-file.path(job$directory,'burnin_redesigned.RData')
- initialized<-redesign_attempt_scenario(function() {
+ initialized<-capture_scenario_outcome(function() {
    progress('running','initialization')
    if(job$phase=='parallel') {
      install_timers()
-     state<-redesign_setup(job$root,job$config)
+     state<-initialize_breeding_pipeline(job$root,job$config)
      burnin<-vector('list',job$config$burnin)
      for(year in seq_len(job$config$burnin)) {
        state$year<-year;progress('running','Burn_in',year)
        cat('Burn-in year',year,'\n')
-       burnin[[year]]<-redesign_year(state,'Pheno',9L,job$rep)
+       burnin[[year]]<-advance_breeding_year(state,'Pheno',9L,job$rep)
        burnin[[year]]$scenario<-'Burn_in'
      }
      save(state,burnin,SP,locuscompt_position_vector,self_compatible_allele,file=base_file)
-     saveRDS(redesign_bind(burnin),file.path(job$directory,'burnin_results.rds'))
+     saveRDS(bind_result_rows(burnin),file.path(job$directory,'burnin_results.rds'))
      saveRDS(state$environment_p,file.path(job$directory,'annual_environment.rds'))
    } else if(!file.exists(base_file)) stop('This replicate has no successfully completed burn-in.')
    TRUE
@@ -63,7 +63,7 @@ redesign_worker <- function(job) {
    scenario<-selected$scenario_id[index]
    records<-list();completed_year<-job$config$burnin
    started<-Sys.time()
-   outcome<-redesign_attempt_scenario(function() {
+   outcome<-capture_scenario_outcome(function() {
      # Reinstall clean functions and load a fresh paired starting population.
      # A failed scenario must not contaminate the next scenario's state or RNG.
      source(file.path(job$root,'redesigned_schemes.R'),local=.GlobalEnv)
@@ -110,10 +110,10 @@ redesign_worker <- function(job) {
      for(k in seq_len(job$config$future)) {
        state$year<-job$config$burnin+k
        progress('running',scenario,state$year)
-       records[[k]]<<-redesign_year(state,method,years,job$rep)
+       records[[k]]<<-advance_breeding_year(state,method,years,job$rep)
        records[[k]]$scenario<<-scenario
        completed_year<<-state$year
-       partial<-redesign_bind(records)
+       partial<-bind_result_rows(records)
        saveRDS(partial,file.path(job$directory,paste0('results_partial_',scenario,'.rds')))
        if(isTRUE(state$config$ocs_enabled)||state$config$speed_breeding) {
          saveRDS(list(solver=state$speed_ocs_solver,crosses=state$speed_cross_trace),
@@ -121,7 +121,7 @@ redesign_worker <- function(job) {
        }
        cat('Completed future year',k,'of',job$config$future,'\n')
      }
-     result<-redesign_bind(records)
+     result<-bind_result_rows(records)
      stopifnot(nrow(result)==job$config$future,!anyDuplicated(result[c('rep','scenario','year')]))
      saveRDS(data.frame(id=seq_len(SP$lastId),dam=SP$pedigree[,1],sire=SP$pedigree[,2]),
        file.path(job$directory,paste0('pedigree_',scenario,'.rds')))
@@ -133,7 +133,7 @@ redesign_worker <- function(job) {
      error=if(outcome$ok) NA_character_ else outcome$error,
      elapsed_seconds=as.numeric(difftime(Sys.time(),started,units='secs')),
      stringsAsFactors=FALSE)
-   saveRDS(redesign_bind(statuses),file.path(job$directory,paste0('scenario_status_',job$phase,'.rds')))
+   saveRDS(bind_result_rows(statuses),file.path(job$directory,paste0('scenario_status_',job$phase,'.rds')))
    if(outcome$ok) {
      outputs[[scenario]]<-outcome$result
      progress('scenario_complete',scenario,completed_year)
@@ -142,11 +142,11 @@ redesign_worker <- function(job) {
      writeLines(outcome$error,file.path(job$directory,paste0('error_',scenario,'.txt')))
      cat('SCENARIO FAILED; continuing other schemes:',scenario,outcome$error,'\n')
    }
-   saveRDS(redesign_bind(outputs),file.path(job$directory,paste0('results_',job$phase,'.rds')))
+   saveRDS(bind_result_rows(outputs),file.path(job$directory,paste0('results_',job$phase,'.rds')))
  }
- manifest<-redesign_bind(statuses)
+ manifest<-bind_result_rows(statuses)
  failed<-if(is.null(manifest)) FALSE else any(manifest$status=='failed')
- result<-list(ok=TRUE,rep=job$rep,result=redesign_bind(outputs),
+ result<-list(ok=TRUE,rep=job$rep,result=bind_result_rows(outputs),
    scenario_status=manifest,has_failures=failed)
  progress(if(failed) 'finished_with_failures' else 'complete','all')
  saveRDS(result[names(result)!='result'],file.path(job$directory,paste0('worker_status_',job$phase,'.rds')))

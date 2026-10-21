@@ -1,15 +1,15 @@
 # Archive evaluated cohorts and construct decision-specific training sets. Do not replace an original PT cohort by its selected AT survivors.
-# Public function names are retained for existing launchers and saved workflows.
+# Function names describe each operation; all launchers use this shared implementation.
 
 # Merge population versions by ID, preferring the most recently supplied version.
-redesign_merge_latest <- function(pops) {
+merge_latest_populations <- function(pops) {
   pops <- Filter(Negate(is.null),pops)
   combined <- mergePops(pops)
   combined[which(!duplicated(as.character(combined@id),fromLast=TRUE))]
 }
 
 # Save complete evaluated cohorts before selection, retaining cohort identity and record year.
-redesign_archive_cohorts <- function(state) {
+archive_evaluated_cohorts <- function(state) {
   if (is.null(state$stage_history)) {
     stop('This burn-in predates stage-specific training archives. Generate a new burn-in; do not reuse historical caches.')
   }
@@ -27,7 +27,7 @@ redesign_archive_cohorts <- function(state) {
 }
 
 # Build the PT-only training population; retained as an explicit implementation, not a source-order alias.
-redesign_training_PT_original <- function(state,candidates,anchor=NULL) {
+build_pt_training_population <- function(state,candidates,anchor=NULL) {
   stage <- if(is.null(anchor)) state$training_cohort_stage else anchor
   if(is.null(stage)) stop('Missing cohort training anchor.')
   cohorts <- tail(state$stage_history[[stage]],state$config$training_cohorts)
@@ -51,7 +51,7 @@ redesign_training_PT_original <- function(state,candidates,anchor=NULL) {
     }
     list(pop=pop,stage=labels,cohort=rep(year,nInd(pop)))
   })
-  train <- redesign_merge_latest(lapply(full,`[[`,'pop'))
+  train <- merge_latest_populations(lapply(full,`[[`,'pop'))
   ids <- unlist(lapply(full,function(x)as.character(x$pop@id)),use.names=FALSE)
   if(anyDuplicated(ids) || nInd(train)!=state$config$training_cohorts*state$config$seedlings_keep) stop('Training requires 1500 unique individuals.')
   positions <- match(as.character(train@id),ids)
@@ -63,14 +63,14 @@ redesign_training_PT_original <- function(state,candidates,anchor=NULL) {
 }
 
 # Identify schemes whose AT/parent decisions require calibrated repeated PT and AT records.
-redesign_uses_repeated_Y9 <- function(state) isTRUE(state$config$first_parental_use==9L)
+uses_pt_at_records <- function(state) isTRUE(state$config$first_parental_use==9L)
 
 # Dispatch training construction according to the decision and repeated-record design.
-redesign_training <- function(state,candidates,anchor=NULL) {
+build_training_population <- function(state,candidates,anchor=NULL) {
   stage <- if(is.null(anchor)) state$training_cohort_stage else anchor
-  train <- redesign_training_PT_original(state,candidates,anchor=stage)
+  train <- build_pt_training_population(state,candidates,anchor=stage)
   extra <- data.frame(id=character(),pheno=numeric(),record_year=integer(),stage=character(),cohort=character())
-  if(redesign_uses_repeated_Y9(state) && stage=='AT3') {
+  if(uses_pt_at_records(state) && stage=='AT3') {
     cohorts <- tail(state$stage_history$AT3,state$config$training_cohorts)
     extra <- do.call(rbind,lapply(names(cohorts),function(year) {
       p <- cohorts[[year]]
@@ -85,7 +85,7 @@ redesign_training <- function(state,candidates,anchor=NULL) {
 }
 
 # Construct the repeated-record table while checking the required cohort and observation counts.
-redesign_repeated_records <- function(train) {
+build_pt_at_records <- function(train) {
   pt <- data.frame(id=as.character(train@id),pheno=as.numeric(train@pheno),record_year=as.integer(train@fixEff),stage='PT',cohort=as.character(train@misc$training_record_cohort))
   records <- rbind(pt,train@misc$extra_AT_records)
   stopifnot(sum(records$stage=='PT')==1500L,length(unique(records$id))==1500L,!anyDuplicated(records[c('id','stage')]))
@@ -94,7 +94,7 @@ redesign_repeated_records <- function(train) {
 }
 
 # Expand prediction candidates onto PT/AT records, retaining missing responses for unobserved candidates.
-redesign_repeated_frame <- function(records,prediction) {
+build_pedigree_record_frame <- function(records,prediction) {
   ids <- sort(unique(as.character(prediction@id)))
   frame <- expand.grid(Stage=c('PT','AT'),Ind=ids,stringsAsFactors=FALSE)
   frame$Ind <- factor(frame$Ind,levels=ids);frame$Stage <- factor(frame$Stage,levels=c('PT','AT'))

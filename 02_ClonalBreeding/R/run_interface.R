@@ -16,7 +16,7 @@ scheme_aliases <- function() {
 
 # Select schemes without changing catalogue order (and therefore worker order).
 select_breeding_schemes <- function(root, schemes) {
-  catalogue <- redesign_all_scenarios(root)
+  catalogue <- all_breeding_scenarios(root)
   aliases <- scheme_aliases()
   ids <- vapply(schemes, function(id) {
     if (id %in% names(aliases)) unname(aliases[[id]]) else id
@@ -28,14 +28,14 @@ select_breeding_schemes <- function(root, schemes) {
 
 # The same engine serves one scheme or a selected experiment. This interface
 # adds validation only; it does not implement a second simulation algorithm.
-run_breeding_experiment <- function(root, schemes='all', config=redesign_config()) {
-  scenarios <- if (identical(schemes,'all')) redesign_all_scenarios(root) else
+run_breeding_experiment <- function(root, schemes='all', config=breeding_config()) {
+  scenarios <- if (identical(schemes,'all')) all_breeding_scenarios(root) else
     select_breeding_schemes(root, schemes)
   if (!nrow(scenarios)) stop('Select at least one breeding scheme.')
-  run_redesigned_schemes(root, config, scenarios)
+  coordinate_breeding_experiment(root, config, scenarios)
 }
 
-run_breeding_scheme <- function(root, scheme, config=redesign_config()) {
+run_breeding_scheme <- function(root, scheme, config=breeding_config()) {
   if (length(scheme)!=1L) stop('run_breeding_scheme requires exactly one scheme.')
   run_breeding_experiment(root, scheme, config)
 }
@@ -61,7 +61,7 @@ pipeline_cli <- function(root, single=FALSE, args=commandArgs(TRUE)) {
   selection <- options[[if(single)'scheme' else 'schemes']]
   if (is.null(selection)) stop('Specify the scheme(s) explicitly; see --help.')
   if(single && (selection=='all'||grepl(',',selection))) stop('Select exactly one scheme.')
-  config <- redesign_config()
+  config <- breeding_config()
   for (key in intersect(keys,c('replicates','workers','threads'))) {
     value <- suppressWarnings(as.numeric(options[[key]]))
     if (!is.finite(value)||value<1||value!=floor(value)||value>.Machine$integer.max)

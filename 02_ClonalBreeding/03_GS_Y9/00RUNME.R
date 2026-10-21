@@ -6,8 +6,8 @@ script<-if(length(files)) tail(files,1)[[1]] else if(length(flag)) sub('^--file=
 if(is.na(script)) stop('Run the saved launcher to resolve its folder.')
 root<-dirname(dirname(normalizePath(script,winslash='/',mustWork=TRUE)))
 source(file.path(root,'redesigned_schemes.R'))
-config<-redesign_config();scenarios<-redesign_all_scenarios(root)
+config<-breeding_config();scenarios<-all_breeding_scenarios(root)
 scenarios<-scenarios[scenarios$scenario_id=='GS_Y9',,drop=FALSE]
 stopifnot(nrow(scenarios)==1L)
-run<-run_redesigned_schemes(root,config,scenarios)
+run<-coordinate_breeding_experiment(root,config,scenarios)
 source(file.path(root,'plot_results.R'));plot_experiment(run$run_dir)

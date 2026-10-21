@@ -3,7 +3,7 @@
 # state$parents holds the parents available for crossing in the current year.
 # Complex prediction and OCS calculations remain in their dedicated modules.
 
-redesign_year <- function(state, method, first_parental_use, rep,
+advance_breeding_year <- function(state, method, first_parental_use, rep,
                           record=TRUE, renew=TRUE) {
   config <- state$config
   validate_ocs_settings(config)
@@ -63,7 +63,7 @@ redesign_year <- function(state, method, first_parental_use, rep,
       start_model <- state$prediction_pt_model
     }
     if (is.null(start_model)) {
-      start_model <- redesign_fit_for_stage(state, method, 'PT2')
+      start_model <- fit_decision_model(state, method, 'PT2')
     }
   }
 
@@ -71,7 +71,7 @@ redesign_year <- function(state, method, first_parental_use, rep,
   accuracy <- NA_real_
   seedlings_before <- if (is.null(state$pop$Seedlings)) 0L else nInd(state$pop$Seedlings)
   if (seedlings_before && method != 'Pheno') {
-    predicted <- redesign_predict(state$pop$Seedlings, method, start_model)
+    predicted <- predict_breeding_values(state$pop$Seedlings, method, start_model)
     accuracy <- suppressWarnings(cor(as.numeric(gv(predicted)), as.numeric(ebv(predicted))))
   }
   if (isTRUE(config$early_selection) && seedlings_before) {
@@ -79,7 +79,7 @@ redesign_year <- function(state, method, first_parental_use, rep,
       stop('Phenotypic early selection is unavailable before yield records.')
     }
     # Replace the seedling population with the retained individuals.
-    state$pop$Seedlings <- redesign_choose(
+    state$pop$Seedlings <- select_best_individuals(
       state$pop$Seedlings, min(config$seedlings_keep, seedlings_before),
       method, start_model
     )
@@ -87,12 +87,12 @@ redesign_year <- function(state, method, first_parental_use, rep,
 
   # 4. SELECT PARENTS FOR IMMEDIATE USE IN YEAR-2/YEAR-4 SCHEMES
   # These candidates have no yield record of their own yet. Parental selection
-  # uses the start-of-year predictions; OCS is handled inside redesign_allocate.
+  # uses the start-of-year predictions; OCS is handled inside select_parent_allocation.
   if (renew && first < 6L && !is.null(candidates)) {
     if (any(is.finite(as.numeric(candidates@pheno)))) {
       stop('Pre-phenotyping candidates unexpectedly have yield records.')
     }
-    allocation <- redesign_allocate(state, candidates, method, start_model, first, state$year)
+    allocation <- select_parent_allocation(state, candidates, method, start_model, first, state$year)
     state$parents <- allocation$parents
     entrants <- allocation$new
   }
@@ -135,22 +135,22 @@ redesign_year <- function(state, method, first_parental_use, rep,
   # 6. UPDATE PHENOTYPES BEFORE SELECTING TRIAL INDIVIDUALS
   # Each assignment replaces the population's aggregate evaluation. Parents
   # are evaluated separately according to age; juveniles have no yield records.
-  state$pop$PT1 <- redesign_measure(state$pop$PT1, 'PT1', state)
-  state$pop$PT2 <- redesign_measure(state$pop$PT2, 'PT2', state)
-  state$pop$AT1 <- redesign_measure(state$pop$AT1, 'AT1', state)
-  state$pop$AT2 <- redesign_measure(state$pop$AT2, 'AT2', state)
-  state$pop$AT3 <- redesign_measure(state$pop$AT3, 'AT3', state)
-  state$pop$ET1 <- redesign_measure(state$pop$ET1, 'ET1', state)
-  state$pop$ET2 <- redesign_measure(state$pop$ET2, 'ET2', state)
-  state$pop$ET3 <- redesign_measure(state$pop$ET3, 'ET3', state)
-  redesign_measure_parents(state)
+  state$pop$PT1 <- update_phenotypes(state$pop$PT1, 'PT1', state)
+  state$pop$PT2 <- update_phenotypes(state$pop$PT2, 'PT2', state)
+  state$pop$AT1 <- update_phenotypes(state$pop$AT1, 'AT1', state)
+  state$pop$AT2 <- update_phenotypes(state$pop$AT2, 'AT2', state)
+  state$pop$AT3 <- update_phenotypes(state$pop$AT3, 'AT3', state)
+  state$pop$ET1 <- update_phenotypes(state$pop$ET1, 'ET1', state)
+  state$pop$ET2 <- update_phenotypes(state$pop$ET2, 'ET2', state)
+  state$pop$ET3 <- update_phenotypes(state$pop$ET3, 'ET3', state)
+  update_parent_phenotypes(state)
 
   # Archive the complete evaluated cohorts BEFORE discarding trial individuals.
-  redesign_archive_cohorts(state)
+  archive_evaluated_cohorts(state)
 
   # 7. FIT THE MODELS FOR THIS YEAR'S COMPLETED PT AND AT COHORTS
-  pt_model <- redesign_fit_for_stage(state, method, 'PT2')
-  at_model <- redesign_fit_for_stage(state, method, 'AT3')
+  pt_model <- fit_decision_model(state, method, 'PT2')
+  at_model <- fit_decision_model(state, method, 'AT3')
   end_model <- if (first == 9L) at_model else pt_model
   state$prediction_pt_model <- pt_model
   state$prediction_at_model <- at_model
@@ -164,9 +164,9 @@ redesign_year <- function(state, method, first_parental_use, rep,
   next_selection <- NULL
   if (renew && first >= 6L && !is.null(state$pop[[target]])) {
     if (method != 'Pheno') {
-      redesign_assert_decision_training(state$pop[[target]], end_model, target)
+      validate_decision_training(state$pop[[target]], end_model, target)
     }
-    next_selection <- redesign_allocate(
+    next_selection <- select_parent_allocation(
       state, state$pop[[target]], method, end_model, first, state$year
     )
     state$pending <- next_selection
@@ -180,18 +180,18 @@ redesign_year <- function(state, method, first_parental_use, rep,
   if (!is.null(state$pop$PT2)) {
     trial_model <- if (method == 'Pheno') NULL else pt_model
     if (method != 'Pheno') {
-      redesign_assert_decision_training(state$pop$PT2, trial_model, 'PT2')
+      validate_decision_training(state$pop$PT2, trial_model, 'PT2')
     }
-    state$pop$PT2 <- redesign_choose(
+    state$pop$PT2 <- select_best_individuals(
       state$pop$PT2, min(config$act, nInd(state$pop$PT2)), method, trial_model
     )
   }
   if (!is.null(state$pop$AT3)) {
     elite_model <- if (method == 'Pheno') NULL else at_model
     if (method != 'Pheno') {
-      redesign_assert_decision_training(state$pop$AT3, elite_model, 'AT3')
+      validate_decision_training(state$pop$AT3, elite_model, 'AT3')
     }
-    state$pop$AT3 <- redesign_choose(
+    state$pop$AT3 <- select_best_individuals(
       state$pop$AT3, min(config$ect, nInd(state$pop$AT3)), method, elite_model
     )
   }
@@ -200,7 +200,7 @@ redesign_year <- function(state, method, first_parental_use, rep,
   # Output formatting/audit columns live in record_results.R. No biological
   # decisions are hidden in that recording function. Fill cycles can skip it.
   if (!record) return(NULL)
-  redesign_record_year(
+  record_annual_results(
     state, config, method, first, rep, accuracy, entrants, target,
     allocation, next_selection, ocs_solution, candidates, seedlings_before
   )

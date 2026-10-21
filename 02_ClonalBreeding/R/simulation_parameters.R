@@ -1,8 +1,8 @@
 # Define shared parameters and the 18 supported schemes. Loading this file does not run simulations.
-# Public function names are retained for existing launchers and saved workflows.
+# Function names describe each operation; all launchers use this shared implementation.
 
 # Return defaults; environment variables supply external data and founder locations.
-redesign_config <- function() {
+breeding_config <- function() {
  list(design_version='PT_AT_ET_optiSel_adultcap32_v12',reps=10L,workers=4L,threads=6L,
   seed=20261005L,asreml_workspace='16gb',burnin=40L,future=40L,fill_cycles=14L,
   parents=32L,crosses=20L,progeny=25L,act=25L,ect=8L,entrants=8L,
@@ -36,7 +36,7 @@ validate_ocs_settings <- function(config) {
 }
 
 # Build the scientific catalogue and optionally validate per-scheme GlobalParameters.R files.
-redesign_scenarios <- function(root=NULL) {
+breeding_scenarios <- function(root=NULL) {
  make <- function(method,first,early=FALSE,renewal=25,ocs_enabled=FALSE,profile=NA_character_) {
   speed <- first==2L
   suffix <- if(ocs_enabled) paste0('_OCS_',profile) else if(renewal!=25) paste0('_R',renewal) else ''
@@ -44,9 +44,9 @@ redesign_scenarios <- function(root=NULL) {
                  if(early) '_Early1500' else '',suffix)
   data.frame(method=method,first_parental_use=as.integer(first),
    phenotyping_years=if(first==9L) 5L else if(first==6L) 2L else 0L,
-   parent_selection_stage=redesign_config()$parent_stage[[as.character(first)]],
-   training_stage=redesign_config()$training_stage[[as.character(first)]],
-   training_cohort_stage=redesign_config()$training_cohort_stage[[as.character(first)]],
+   parent_selection_stage=breeding_config()$parent_stage[[as.character(first)]],
+   training_stage=breeding_config()$training_stage[[as.character(first)]],
+   training_cohort_stage=breeding_config()$training_cohort_stage[[as.character(first)]],
    selection_timing=if(first>=6L) 'end_of_previous_year' else 'before_own_phenotyping',
    early_selection=early,progeny_per_cross=if(early) 75L else 25L,
    seedlings_keep=500L,new_parents_per_year=if(!ocs_enabled) as.integer(32*renewal/100) else NA_integer_,
@@ -85,5 +85,5 @@ redesign_scenarios <- function(root=NULL) {
 }
 
 # Compatibility entry point used by existing launchers.
-redesign_all_scenarios <- function(root=NULL) redesign_scenarios(root)
+all_breeding_scenarios <- function(root=NULL) breeding_scenarios(root)
 

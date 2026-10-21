@@ -27,11 +27,11 @@ All paths below are relative to `02_ClonalBreeding/`.
 
 | Review question | Read here |
 | --- | --- |
-| What differs between PH9, GS6-E and SB2-OG? | `R/simulation_parameters.R`: `redesign_scenarios()` |
+| What differs between PH9, GS6-E and SB2-OG? | `R/simulation_parameters.R`: `breeding_scenarios()` |
 | When are cohorts aged and when are parents crossed? | `R/advance_year.R`: explicit replacements in steps 1 and 5 |
 | Is seedling accuracy measured before early selection? | `R/advance_year.R`: step 3 |
 | Which observations train each selection decision? | `R/build_training_population.R` |
-| Where is the calibrated repeated PT/AT covariance applied? | `R/fit_prediction_model.R`: `redesign_calibrated_residual()`, `redesign_native_repeated_gs()`, `redesign_asreml_calibrated()` |
+| Where is the calibrated repeated PT/AT covariance applied? | `R/fit_prediction_model.R`: `calculate_pt_at_residual_covariance()`, `fit_pt_at_genomic_model()`, `fit_calibrated_asreml()` |
 | Are PT and AT cuts made before or after parental decisions? | `R/advance_year.R`: steps 8-9; `R/apply_selection.R` |
 | How is the target-Ne bound constructed and checked? | `optimize_contributions.R`, `ocs_optisel.R` |
 | How are S alleles, parental ages and contribution caps enforced? | `optimize_contributions.R`, `ocs_discrete.R`, `ocs_optisel.R`, `compatible_crosses.R` |
@@ -62,7 +62,7 @@ For an interactive R session:
 ```r
 root <- normalizePath('02_ClonalBreeding', winslash='/')
 source(file.path(root, 'redesigned_schemes.R')) # definitions only
-config <- redesign_config()
+config <- breeding_config()
 config$reps <- 1L
 config$workers <- 1L
 config$threads <- 6L
@@ -115,3 +115,8 @@ These checks do not launch breeding replicates and do not require an ASReml
 licence. They do not claim to be a new validation of full 40-year trajectories
 or of licensed ASReml numerical fits. The sources and results used for the
 manuscript remain in their existing frozen runs, outside this refactor.
+# Parental renewal
+
+See [Parental renewal](PARENTAL_RENEWAL.md) for the current/pending distinction,
+immediate versus next-year use, and ordinary replacement versus OCS.
+

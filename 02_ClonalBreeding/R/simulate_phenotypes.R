@@ -1,8 +1,8 @@
 # Generate aggregate yield evaluations and their correlated errors. Reference variances remain fixed after selection.
-# Public function names are retained for existing launchers and saved workflows.
+# Function names describe each operation; all launchers use this shared implementation.
 
 # Update a correlated aggregate residual while preserving the requested marginal variance.
-redesign_error_step <- function(previous,old_variance,new_variance) {
+update_correlated_error <- function(previous,old_variance,new_variance) {
   if(old_variance<=1e-12) return(rnorm(length(previous),sd=sqrt(new_variance)))
   covariance <- min(old_variance,new_variance)
   ratio <- covariance/old_variance
@@ -10,7 +10,7 @@ redesign_error_step <- function(previous,old_variance,new_variance) {
 }
 
 # Create the shared annual environment calendar and restore the caller's RNG state.
-redesign_environment_schedule <- function(config,seed) {
+create_environment_schedule <- function(config,seed) {
   had_seed <- exists('.Random.seed',envir=.GlobalEnv,inherits=FALSE)
   if(had_seed) old_seed <- get('.Random.seed',envir=.GlobalEnv)
   on.exit(if(had_seed) assign('.Random.seed',old_seed,envir=.GlobalEnv) else
@@ -21,7 +21,7 @@ redesign_environment_schedule <- function(config,seed) {
 }
 
 # Update one population's aggregate phenotype using its evaluation history and stage precision.
-redesign_measure <- function(pop,stage,state) {
+update_phenotypes <- function(pop,stage,state) {
   if(is.null(pop)) return(NULL)
   if(is.null(state$environment_p) || is.null(state$annual_evaluations))
     stop('Missing annual environment state. Generate a new burn-in.')
@@ -48,7 +48,7 @@ redesign_measure <- function(pop,stage,state) {
     variance <- max(0,variance)
     prior <- state$errors[[ids[i]]]
     if(is.null(prior)) error <- rnorm(1,sd=sqrt(variance)) else
-      error <- redesign_error_step(prior$error,prior$variance,variance)
+      error <- update_correlated_error(prior$error,prior$variance,variance)
     state$errors[[ids[i]]] <- list(error=error,variance=variance)
     residuals[i] <- error
   }
@@ -58,7 +58,7 @@ redesign_measure <- function(pop,stage,state) {
 }
 
 # Evaluate retained parents according to their ages; juvenile parents have no yield phenotype.
-redesign_measure_parents <- function(state) {
+update_parent_phenotypes <- function(state) {
  age <- state$year-state$birth[as.character(state$parents@id)]
  if(anyNA(age)) stop('Unknown parental birth year.')
  parts <- list();juvenile <- which(age<4L)
@@ -69,7 +69,7 @@ redesign_measure_parents <- function(state) {
  counts <- pmin(length(stages),pmax(1L,age-3L))
  for(count in sort(unique(counts[age>=4L]))) {
   pop <- state$parents[which(age>=4L & counts==count)]
-  parts[[length(parts)+1L]] <- redesign_measure(pop,stages[count],state)
+  parts[[length(parts)+1L]] <- update_phenotypes(pop,stages[count],state)
  }
  state$parents <- mergePops(parts)
  invisible(state)

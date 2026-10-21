@@ -30,7 +30,7 @@ annual_fixture_engine <- function(root, year_function=NULL) {
   engine <- new.env(parent=.GlobalEnv)
   sys.source(file.path(root,'redesigned_schemes.R'),envir=engine)
   if(!is.null(year_function)) {
-    environment(year_function)<-engine;engine$redesign_year<-year_function
+    environment(year_function)<-engine;engine$advance_breeding_year<-year_function
   }
   engine$trace <- character()
   log <- function(text)engine$trace<-c(engine$trace,text)
@@ -43,7 +43,7 @@ annual_fixture_engine <- function(root, year_function=NULL) {
   engine$locuscompt_position_vector <- 1L
   engine$SP <- NULL
 
-  engine$redesign_predict <- function(pop,method,model) {
+  engine$predict_breeding_values <- function(pop,method,model) {
     log(paste('predict',method,pop@id[1],if(is.null(model))'none' else model$label))
     if(method!='Pheno')pop@ebv<-matrix(pop@truth+if(model$label=='AT3')0.2 else 0.1)
     pop
@@ -53,26 +53,26 @@ annual_fixture_engine <- function(root, year_function=NULL) {
     score<-if(use=='pheno')pop@pheno else pop@ebv
     pop[order(as.numeric(score),decreasing=TRUE)[seq_len(nInd)]]
   }
-  engine$redesign_fit_for_stage <- function(state,method,anchor) {
+  engine$fit_decision_model <- function(state,method,anchor) {
     log(paste('fit',method,anchor));if(method=='Pheno')NULL else list(label=anchor)
   }
-  engine$redesign_assert_decision_training <- function(pop,model,anchor) {
+  engine$validate_decision_training <- function(pop,model,anchor) {
     log(paste('check_training',anchor,pop@id[1]))
     stopifnot(identical(model$label,anchor));invisible(TRUE)
   }
-  engine$redesign_measure <- function(pop,stage,state) {
+  engine$update_phenotypes <- function(pop,stage,state) {
     log(paste('measure',stage));if(is.null(pop))return(NULL)
     pop@pheno<-matrix(pop@truth+state$year/100+rnorm(length(pop@id),sd=.01));pop
   }
-  engine$redesign_measure_parents <- function(state) {
-    state$parents<-engine$redesign_measure(state$parents,'Parents',state);invisible(state)
+  engine$update_parent_phenotypes <- function(state) {
+    state$parents<-engine$update_phenotypes(state$parents,'Parents',state);invisible(state)
   }
-  engine$redesign_archive_cohorts <- function(state) {
+  engine$archive_evaluated_cohorts <- function(state) {
     log('archive')
     for(stage in c('PT2','AT3'))state$stage_history[[stage]][[as.character(state$year)]]<-state$pop[[stage]]
     invisible(state)
   }
-  engine$redesign_training <- function(state,candidates,anchor=NULL) {
+  engine$build_training_population <- function(state,candidates,anchor=NULL) {
     log('training_metadata');annual_fixture_population(paste0('training',1:6))
   }
   make_allocation <- function(state,parents,first,selection_year) {
@@ -87,7 +87,7 @@ annual_fixture_engine <- function(root, year_function=NULL) {
          use_year=selection_year+if(first>=6L)1L else 0L,accuracy=.7)
   }
   engine$fixture_allocation <- make_allocation
-  engine$redesign_allocate <- function(state,candidates,method,model,first,selection_year) {
+  engine$select_parent_allocation <- function(state,candidates,method,model,first,selection_year) {
     log(paste('parents',first,if(state$config$ocs_enabled)'OCS' else 'replacement'))
     make_allocation(state,candidates[1:3],first,selection_year)
   }
@@ -105,7 +105,7 @@ annual_fixture_engine <- function(root, year_function=NULL) {
 }
 
 annual_fixture_case <- function(engine,scenario,cached=TRUE,record=TRUE,renew=TRUE) {
-  state<-new.env(parent=emptyenv());config<-engine$redesign_config()
+  state<-new.env(parent=emptyenv());config<-engine$breeding_config()
   fields<-setdiff(intersect(names(config),names(scenario)),c('training_stage','training_cohort_stage'))
   for(field in fields)config[[field]]<-scenario[[field]]
   config$scenario_id<-scenario$scenario_id
@@ -129,14 +129,14 @@ annual_fixture_case <- function(engine,scenario,cached=TRUE,record=TRUE,renew=TR
   state$model_method<-if(cached)scenario$method else NULL
   state$prediction_pt_model<-if(cached)list(label='previous_PT2') else NULL
   engine$trace<-character();set.seed(84321L)
-  row<-engine$redesign_year(state,scenario$method,scenario$first_parental_use,1L,record,renew)
+  row<-engine$advance_breeding_year(state,scenario$method,scenario$first_parental_use,1L,record,renew)
   snapshot<-as.list(state);snapshot<-snapshot[sort(names(snapshot))]
   c(row_md5=annual_fixture_hash(row),state_md5=annual_fixture_hash(snapshot),
     calls_md5=annual_fixture_hash(engine$trace),rng_md5=annual_fixture_hash(.Random.seed))
 }
 
 annual_fixture_results <- function(engine,root) {
-  catalogue<-engine$redesign_all_scenarios(root);results<-list()
+  catalogue<-engine$all_breeding_scenarios(root);results<-list()
   for(i in seq_len(nrow(catalogue)))for(cached in c(TRUE,FALSE)) {
     key<-paste(catalogue$scenario_id[i],if(cached)'cached' else 'initial',sep=':')
     results[[key]]<-annual_fixture_case(engine,as.list(catalogue[i,]),cached)

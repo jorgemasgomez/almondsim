@@ -9,15 +9,30 @@ sys.source(file.path(root,'redesigned_schemes.R'),envir=engine)
 # Scientific signatures were captured before refactoring. The controller's
 # expected signature permits exactly the replacement of its old copy block by
 # freeze_pipeline_source(original_root,root); all its other instructions match.
+
+# Resolve current names to the original symbols before hashing. This accepts
+# renaming only, not a change in mathematical expressions or control flow.
+rename_map <- read.csv(file.path(root,'tests','function_renames.csv'))
+canonicalize_names <- function(expression) {
+  text <- paste(deparse(expression,width.cutoff=500L),collapse='\n')
+  for(i in seq_len(nrow(rename_map))) {
+    text <- gsub(paste0('\\b',rename_map$current[i],'\\b'),rename_map$previous[i],text,perl=TRUE)
+  }
+  parse(text=text,keep.source=FALSE)[[1L]]
+}
+
 fingerprint <- function(fun) {
   path <- tempfile();on.exit(unlink(path))
+  normalized <- eval(canonicalize_names(fun))
   syntax <- parse(text=deparse(body(fun),width.cutoff=500L),keep.source=FALSE)[[1L]]
-  saveRDS(list(formals=formals(fun),body=syntax),path,version=2,compress=FALSE)
+  saveRDS(list(formals=formals(normalized),body=canonicalize_names(syntax)),path,version=2,compress=FALSE)
   unname(tools::md5sum(path))
 }
 reference <- read.csv(file.path(root,'tests','pipeline_reference_signatures.csv'))
 actual <- vapply(reference$function_name,function(name)fingerprint(engine[[name]]),character(1))
-stopifnot(identical(unname(actual),reference$ast_md5))
+if(!identical(unname(actual),reference$ast_md5)) {
+  stop('Scientific syntax differs: ',paste(reference$function_name[actual!=reference$ast_md5],collapse=', '))
+}
 cat('PASS:',nrow(reference)-1L,'unchanged scientific/runtime signatures and the controller with only its source-freeze update.\n')
 
 # There must be a single explicit definition per module-level function. PT-only
@@ -31,7 +46,7 @@ definitions <- unlist(lapply(modules,function(file) {
   }))
 }))
 stopifnot(!anyDuplicated(definitions))
-catalogue <- engine$redesign_all_scenarios(root)
+catalogue <- engine$all_breeding_scenarios(root)
 aliases <- engine$scheme_aliases()
 stopifnot(nrow(catalogue)==18L,length(aliases)==18L,
           setequal(unname(aliases),catalogue$scenario_id))
@@ -70,7 +85,7 @@ frozen <- tempfile('almondsim_frozen_');dir.create(frozen)
 engine$freeze_pipeline_source(root,frozen)
 snapshot <- new.env(parent=.GlobalEnv)
 sys.source(file.path(frozen,'redesigned_schemes.R'),envir=snapshot)
-stopifnot(identical(snapshot$redesign_config(),engine$redesign_config()))
+stopifnot(identical(snapshot$breeding_config(),engine$breeding_config()))
 manifest <- read.csv(file.path(frozen,'source_manifest.csv'))
 stopifnot(identical(unname(tools::md5sum(file.path(frozen,manifest$file))),manifest$md5))
 worker_script <- file.path(frozen,'check_frozen_worker.R')
@@ -78,7 +93,7 @@ writeLines(c(
   paste0('.libPaths(',paste(capture.output(dput(.libPaths())),collapse=''),')'),
   paste0('directory <- ',encodeString(frozen,quote='"')),
   "source(file.path(directory,'redesigned_schemes.R'))",
-  "stopifnot(nrow(redesign_all_scenarios())==18L)",
+  "stopifnot(nrow(all_breeding_scenarios())==18L)",
   paste0("stopifnot(length(list.files(file.path(directory,'R')))==",length(modules),"L)"),
   "cat('Frozen worker module load passed.\\n')"),worker_script)
 # A clean Rscript process exercises the same frozen-code loading boundary
