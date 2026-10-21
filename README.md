@@ -238,3 +238,11 @@ Please cite the methods and software used in your analysis:
 ## Licence
 
 The source code is distributed under the [MIT licence](LICENSE). Original framework authorship and copyright notices are retained.
+
+### Phenotype evaluations
+
+PT, AT and elite phenotypes are generated as separate completed-trial
+evaluations with AlphaSimR. Original PT records are retained when the same
+individual is later evaluated in AT. See [stage phenotyping](02_ClonalBreeding/STAGE_PHENOTYPING.md)
+and [parental renewal](02_ClonalBreeding/PARENTAL_RENEWAL.md) for the data flow.
+Previously generated results retain the phenotype model of their frozen source.

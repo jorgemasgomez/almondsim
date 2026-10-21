@@ -1,8 +1,8 @@
 # Active manuscript breeding design
 
 Years in scheme names denote **first parental use in crossing**.
-The crossing/seed cycle is year 0; juvenile stages are 1â€“3; PT 4â€“5;
-AT 6â€“8; ET 9â€“11. PT aggregate h2 is .20, AT .40, ET .50.
+The crossing/seed cycle is year 0; juvenile stages are 1–3; PT 4–5;
+AT 6–8; ET 9–11. PT aggregate h2 is .20, AT .40, ET .50.
 The fixed cuts are 500 -> 25 after PT and 25 -> 8 after AT.
 Eight selected individuals completing AT in year 8 can first cross in year 9.
 Parents completing PT in year 5 can first cross in year 6.
