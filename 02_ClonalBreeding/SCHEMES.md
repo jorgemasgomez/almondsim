@@ -128,8 +128,8 @@ of an event or its allocated family size. Failures remain explicit.
 ## Version and provenance
 
 The current OCS source design is `PT_AT_ET_optiSel_adultcap32_v12`.
-Earlier matched burn-ins can be reused with their seeds and environments;
-historical future results must retain their original versions. All 18 retained schemes belong to the manuscript comparison.
+New runs require a burn-in generated with the current source design.
+Archived results retain their original frozen sources and versions. All 18 retained schemes belong to the manuscript comparison.
 The early selection, calendars, phenotyping and prediction models are unchanged.
 For N=1500, a genotype contributes its combined maternal/paternal count divided
 by 3000; the 10% cap allows at most 300 participations, and the 3.2% adult

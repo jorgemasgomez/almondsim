@@ -181,7 +181,13 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
  stopifnot(!anyDuplicated(input$data[c('rep','scenario','year')]))
  all_complete<-all(input$coverage$complete)
  version<-input$config$config$design_version
- historical_ocs<-!identical(version,'PT_AT_ET_optiSel_native_offspring_v9')
+ # Current-source plotting does not reinterpret OCS results from another design.
+ ocs_rows<-grepl('_OCS_',input$data$scenario,fixed=TRUE)
+ if(any(ocs_rows)&&!identical(version,'PT_AT_ET_optiSel_adultcap32_v12'))
+   stop('OCS plotting requires the current source design; use the archived plotting code for an older experiment.')
+ if(any(ocs_rows)&&'designVersion'%in%names(input$data)&&
+    any(is.na(input$data$designVersion[ocs_rows])|input$data$designVersion[ocs_rows]!=version))
+   stop('OCS records do not match the recorded source design.')
  subtitle<-if(preview||!all_complete)'PROVISIONAL | complete trajectories only; unavailable schemes remain explicit'else 'Complete trajectories'
  summaries<-list();panel_coverage<-list();palette_key<-list()
  for(b in manuscript_blocks()) {
@@ -307,7 +313,6 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
  write.csv(counts,file.path(out,'final_year_counts.csv'),row.names=FALSE)
  saveRDS(q,file.path(out,'final_year_boxplot.rds'))
  writeLines(c(paste('Data status:',subtitle),
-  paste('Historical OCS:',historical_ocs),
   'No overall titles, subtitles or explanatory captions are printed inside figures.',
   'Four horizontal triptychs and one vertical endpoint grid.',
   'Trajectory metric order: selection accuracy, genetic gain, genetic variance. Solid lines only.',
@@ -317,7 +322,7 @@ plot_manuscript <- function(run,with_intervals=TRUE,out=NULL,preview=FALSE,paire
   'Endpoint grid contains genetic gain and genetic variance only. Boxes show complete replicates per scheme, not paired differences.',
   'Gain is relative to the replicate burn-in; variance uses retained seedlings; accuracy is measured before early selection.',
   'Pheno accuracy is NA, not zero. n=0 is missing; n=1 is a single replicate, not an estimate of uncertainty.',
-  paste('Source design:',version),'Historical OCS and native-offspring OCS must not be pooled.'),file.path(out,'README.txt'))
+  paste('Source design:',version),'OCS results must match the recorded current source design.'),file.path(out,'README.txt'))
  invisible(out)
 }
 

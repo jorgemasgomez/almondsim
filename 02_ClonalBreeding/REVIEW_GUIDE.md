@@ -19,7 +19,7 @@ All paths below are relative to `02_ClonalBreeding/`.
    identities and candidate own records, not only training-set sizes.
 5. **Check selection:** `R/apply_selection.R` and `R/select_parents.R`.
 6. **Check crosses/OCS:** `compatible_crosses.R`, `ocs_discrete.R`,
-   `manual_ocs_adapter.R` and `ocs_optisel.R`. See the dedicated OCS diagram.
+   `optimize_contributions.R` and `ocs_optisel.R`. See the dedicated OCS diagram.
 7. **Check measurement and replication:** `R/record_results.R`,
    `R/run_replicate.R` and `R/run_experiment.R`.
 
@@ -33,8 +33,8 @@ All paths below are relative to `02_ClonalBreeding/`.
 | Which observations train each selection decision? | `R/build_training_population.R` |
 | Where is the calibrated repeated PT/AT covariance applied? | `R/fit_prediction_model.R`: `redesign_calibrated_residual()`, `redesign_native_repeated_gs()`, `redesign_asreml_calibrated()` |
 | Are PT and AT cuts made before or after parental decisions? | `R/advance_year.R`: steps 8-9; `R/apply_selection.R` |
-| How is the target-Ne bound constructed and checked? | `manual_ocs_adapter.R`, `ocs_optisel.R` |
-| How are S alleles, parental ages and contribution caps enforced? | `manual_ocs_adapter.R`, `ocs_discrete.R`, `ocs_optisel.R`, `compatible_crosses.R` |
+| How is the target-Ne bound constructed and checked? | `optimize_contributions.R`, `ocs_optisel.R` |
+| How are S alleles, parental ages and contribution caps enforced? | `optimize_contributions.R`, `ocs_discrete.R`, `ocs_optisel.R`, `compatible_crosses.R` |
 | How are shared burn-ins, RNG streams and environmental histories maintained? | `R/run_experiment.R`, `R/run_replicate.R`, `R/simulate_phenotypes.R` |
 | What happens after a scenario fails? | `R/run_replicate.R`: outcome/status handling |
 | Is a running experiment protected from later source edits? | `R/freeze_pipeline_source.R` and the run's `code/source_manifest.csv` |
@@ -76,10 +76,11 @@ select_breeding_schemes(root, 'GS6-E') # inspect settings; no run
 
 ```sh
 Rscript 02_ClonalBreeding/tests/check_readable_pipeline.R
+Rscript 02_ClonalBreeding/tests/check_ne_configuration.R
 Rscript 02_ClonalBreeding/tests/check_ocs_native_offspring.R
 ```
 
-The first check compares the executable syntax of 45 pre-existing functions
+The first check compares the executable syntax of 39 unchanged functions
 against signatures captured from commit
 `da0f9c8c2e7b46e10b972f84e4690229549d882e` before reorganization. It also checks
 unique module definitions, scheme aliases, cohort movement, CLI dispatch,
@@ -90,7 +91,16 @@ new `R/` directory in addition to the existing top-level files. Its worker
 scheduling and scientific settings remain unchanged. A separate expected
 controller signature checks that only this source-copy block was replaced.
 
-The second check exercises the existing OCS allocation and crossing fixtures.
+The Ne configuration check covers the six intentional configuration/dispatch
+changes separately: an explicit OCS switch, target-Ne settings, removal of
+unused output fields, and loading only the current source design. Catalogue
+settings are checked against every scheme directory. `R/simulation_parameters.R`
+is the executable catalogue; there is no separately maintained JSON copy.
+
+The optional `analysis/export_pedigree.R` utility exports a saved pedigree to
+CSV. It does not participate in simulation execution.
+
+The final check exercises the current OCS allocation and crossing fixtures.
 These checks do not launch breeding replicates and do not require an ASReml
 licence. They do not claim to be a new validation of full 40-year trajectories
 or of licensed ASReml numerical fits. The sources and results used for the

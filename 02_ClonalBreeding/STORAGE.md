@@ -1,7 +1,8 @@
 # Code and external data
 
-The active catalogue contains the 18 manuscript schemes. Run `main.R` explicitly for all schemes,
-or `<numbered scenario>/00RUNME.R` for one. Sourcing the engine only defines functions.
+The active catalogue contains the 18 manuscript schemes. Use `run_experiment.R --schemes=all`
+for all schemes, or `run_scheme.R --scheme=GS6-E` for one. Numbered folders retain
+their own `00RUNME.R` entry points. Sourcing the engine only defines functions.
 Default: 10 replicates, 40 burn-in years and 40 future years, preceded by 14 fixed-founder
 initialization cycles. Full successful future coverage is 7,200 unique rows (18 x 10 x 40).
 

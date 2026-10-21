@@ -1,5 +1,5 @@
-# Isolated prototype: direct bound, single opticont call, default solver.
-# No simulation/configuration changes. Ne conversion requires calibrated reference and generation interval.
+# Current Ne-based OCS: one opticont call per decision with the default solver.
+# The bound uses standing-parent coancestry and mean age as a generation-interval proxy.
 # Native optiSel contribution -> offspring count -> mating workflow.
 # This adapter defines almond biology and validates results; it does not repair,
 # locally refine or substitute contribution vectors returned by optiSel.
@@ -181,7 +181,7 @@ optisel_offspring_profile <- function(K,bv,allowed,N,target_Ne,max_contribution=
  excess<-max(0,met$kinship-B);relative<-if(B>0)excess/B else if(excess==0)0 else Inf
  if(excess>.10*abs(B)+1e-7)stop('Rounded coancestry exceeds authorized 10% relative allowance.')
  if(excess>1e-8)warning(sprintf('Native offspring rounding coancestry exceeds target by %.12g (%.6g%%); counts preserved.',excess,100*relative),call.=FALSE)
- list(plan=final$plan,family_sizes=final$family_sizes,metrics=met,bound=B,minK=NA_real_,maxK=NA_real_,alpha=NA_real_,
+ list(plan=final$plan,family_sizes=final$family_sizes,metrics=met,bound=B,
  audit=list(implementation='optiSel SI groups adultcap3.2percent v12',individual_caps=individual_caps,adult_age_threshold=4,adult_cap=adult_cap,minimum_adults=minimum_adults,realized_adult_contributors=sum(adult & met$counts>0),si_groups=si_groups,SI_group_bound=.5,max_continuous_SI_group=if(is.null(si_groups))NA_real_ else max(tapply(c,si_groups,sum)),allocation_mode=mode,
  coancestry_policy='relative_excess_max_10pct_20261018',max_relative_coancestry_excess=.10,continuous_kinship_excess=optimum$continuous_excess,continuous_kinship_excess_relative=optimum$continuous_relative,optimizer_variables=length(c),context_seconds=context_seconds,optimization_seconds=optimization_seconds,allocation_seconds=unname((proc.time()-allocation_started)['elapsed']),target_Ne=target_Ne,reference_kinship=reference_kinship,generation_interval_proxy=generation_interval,
  continuous_gain=optimum$gain,continuous_kinship=optimum$kinship,continuous_contributions=c,
@@ -189,5 +189,5 @@ optisel_offspring_profile <- function(K,bv,allowed,N,target_Ne,max_contribution=
  final_matings=final$matings,solver_status=final$solver_status,continuous_bound=B,
  max_individual_contribution=max_contribution,offspring=N,rounded_bound_satisfied=excess<=1e-8,
  rounded_kinship_excess=excess,rounded_kinship_excess_relative=relative,
- max_parents=NA_integer_,custom_contribution_refinement=FALSE,custom_rounding_allowance=FALSE))
+ custom_contribution_refinement=FALSE,custom_rounding_allowance=FALSE))
 }

@@ -35,7 +35,7 @@ redesign_setup <- function(root,config) {
   source(file.path(root,'00_Burn_in','GlobalParameters.R'),local=.GlobalEnv)
   source(file.path(root,'compatible_crosses.R'),local=.GlobalEnv)
   source(file.path(root,'ocs_discrete.R'),local=.GlobalEnv)
-  source(file.path(root,'manual_ocs_adapter.R'),local=.GlobalEnv)
+  source(file.path(root,'optimize_contributions.R'),local=.GlobalEnv)
   if(!identical(config$founder_source,'bank150')) stop('The revised design requires the bank150/60000 founder source.')
   bank <- redesign_founder_bank(config$founder_bank)
   founder_count <- config$parents

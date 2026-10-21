@@ -11,7 +11,8 @@ seedlings_keep <- 500L
 new_parents_per_year <- 8L
 renewal_percent <- 25
 nParents <- 32L
-ocs_alpha <- NA_real_
+ocs_enabled <- FALSE
+ocs_target_Ne <- NA_real_
 ocs_backend <- NA_character_
 speed_breeding <- FALSE
 minimum_mother_age <- 4L

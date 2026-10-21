@@ -11,8 +11,7 @@ seedlings_keep <- 500L
 new_parents_per_year <- NA_integer_
 renewal_percent <- NA_real_
 nParents <- 32L # initial/burn-in pool only; not an OCS contributor limit
-# Legacy dispatch marker only; no alpha interpolation.
-ocs_alpha <- 0.1
+ocs_enabled <- TRUE
 ocs_target_Ne <- 30
 ocs_backend <- "optiSel_adultcap32_v12"
 speed_breeding <- FALSE
@@ -20,6 +19,4 @@ minimum_mother_age <- 4L
 minimum_pollen_age <- 4L
 
 # OCS uses a fixed offspring total with variable family sizes and no parent-count limit.
-ocs_family_sizes <- "variable"
 ocs_max_contribution <- 0.10
-ocs_max_parents <- NA_integer_

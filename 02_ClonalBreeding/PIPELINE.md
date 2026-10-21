@@ -11,7 +11,7 @@ not source every module again at each annual step.
 flowchart TD
     One["run_scheme.R<br/>Choose one manuscript scheme"] --> Load["redesigned_schemes.R<br/>Load the R/ modules; do not start a run"]
     Many["run_experiment.R<br/>Choose a set of schemes"] --> Load
-    Old["main.R or a scheme's 00RUNME.R<br/>Existing launchers"] --> Load
+    Old["Scheme-specific 00RUNME.R<br/>Launch the scheme from its own folder"] --> Load
     Load --> Config["R/simulation_parameters.R<br/>Define parameters and the 18-scheme catalogue"]
     Config --> Interface["R/run_interface.R<br/>Resolve PH9, GS6-E, SB2-OG, etc."]
     Interface --> Run["R/run_experiment.R<br/>Create output directory and replicate jobs"]
@@ -64,8 +64,8 @@ Important timing details:
   and are stored for crossing in the following year.
 - PT/AT training archives are saved before reducing trial populations. The
   training data therefore retain the original PT records, not just survivors.
-- Recording remains after early and trial selection. The output columns and
-  original scientific scenario IDs remain unchanged.
+- Recording remains after early and trial selection. Scientific scenario IDs
+  remain unchanged; current OCS outputs report the enabled flag and target Ne.
 
 ## Follow the OCS branch
 
@@ -73,19 +73,18 @@ Important timing details:
 flowchart TD
     Parents["Select parents<br/>R/select_parents.R"] --> IsOCS{"OCS enabled?"}
     IsOCS -->|No| Replace["Rank incoming and existing parents<br/>R/select_parents.R"]
-    IsOCS -->|Yes| Pool["Build candidate pool, ages and S-genotype groups<br/>manual_ocs_adapter.R"]
+    IsOCS -->|Yes| Pool["Build candidate pool, ages and S-genotype groups<br/>optimize_contributions.R"]
     Pool --> K["Calculate genomic coancestry and compatibility<br/>ocs_discrete.R"]
     K --> Opt["Optimize contributions and round native offspring counts<br/>ocs_optisel.R: opticont and noffspring"]
     Opt --> Mate["Allocate compatible matings / joint parental roles<br/>ocs_optisel.R: matings and lpSolve adapter"]
-    Mate --> Validate["Validate caps, ages, compatibility and offspring budget<br/>manual_ocs_adapter.R and ocs_optisel.R"]
+    Mate --> Validate["Validate caps, ages, compatibility and offspring budget<br/>optimize_contributions.R and ocs_optisel.R"]
     Validate --> Cross["Generate offspring with the validated family sizes<br/>compatible_crosses.R"]
     Replace --> Cross
 ```
 
-The historical filename `manual_ocs_adapter.R` is retained for compatibility.
-It does not mean manual contribution repair. The native optiSel workflow and
-its biological adapters are unchanged by the module reorganization. See
-[MANUAL_OCS.md](MANUAL_OCS.md) for the allocation constraints.
+`optimize_contributions.R` constructs the current Ne-based optimization inputs.
+The native optiSel workflow and its biological adapters implement the constraints
+described in [MANUAL_OCS.md](MANUAL_OCS.md).
 
 ## Script responsibilities
 
@@ -108,13 +107,14 @@ its biological adapters are unchanged by the module reorganization. See
 | `R/predict_genetic_values.R` | Predict candidate breeding values | Candidates/model -> scored candidates |
 | `R/apply_selection.R` | Apply rank-based early and trial selection | Scored population -> retained individuals |
 | `R/select_parents.R` | Choose parents or dispatch OCS | Existing/incoming parents -> allocation |
-| `manual_ocs_adapter.R` | Translate almond biology to OCS inputs | Candidate pool -> validated OCS allocation |
+| `optimize_contributions.R` | Translate almond biology to OCS inputs | Candidate pool -> validated OCS allocation |
 | `ocs_discrete.R` | Coancestry and compatibility calculations | Genotypes -> K, compatibility, metrics |
 | `ocs_optisel.R` | Native optimization, counts and mating assignment | Constraints/BVs/K -> counts and mating plan |
 | `compatible_crosses.R` | Generate compatible offspring | Parents/plan -> F1 population |
 | `R/record_results.R` | Summarize stages and combine records | Populations/records -> annual data frames |
 | `R/runtime_diagnostics.R` | Timing, diagnostics and output checks | Tasks/conditions -> external logs |
 | `plot_manuscript.R` | Produce manuscript plots/statistics | Completed run -> figures and analysis files |
+| `analysis/export_pedigree.R` | Optional pedigree export | Saved pedigree -> CSV |
 
 Most functions retain their `redesign_*` names so existing launchers still work.
 The four `*_PT_original` functions are now explicit definitions of the PT-only

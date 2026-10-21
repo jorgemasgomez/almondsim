@@ -18,7 +18,7 @@ fingerprint <- function(fun) {
 reference <- read.csv(file.path(root,'tests','pipeline_reference_signatures.csv'))
 actual <- vapply(reference$function_name,function(name)fingerprint(engine[[name]]),character(1))
 stopifnot(identical(unname(actual),reference$ast_md5))
-cat('PASS: 45 unchanged scientific/runtime signatures and the controller with only its source-freeze update.\n')
+cat('PASS:',nrow(reference)-1L,'unchanged scientific/runtime signatures and the controller with only its source-freeze update.\n')
 
 # There must be a single explicit definition per module-level function. PT-only
 # and repeated-record variants have distinct names instead of late overrides.

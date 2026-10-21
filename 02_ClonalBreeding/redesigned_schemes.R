@@ -1,4 +1,4 @@
-# Compatibility entry point: existing main.R and 00RUNME.R files keep working.
+# Engine loader used by run_scheme.R, run_experiment.R and scheme-specific 00RUNME.R.
 # Scientific logic is defined once in the named R/ modules; no simulations start here.
 library(AlphaSimR)
 local({

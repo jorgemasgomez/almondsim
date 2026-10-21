@@ -19,11 +19,12 @@ redesign_renew <- function(parents,candidates,method,model,config) {
 
 # Return a parent allocation; ordinary replacement and OCS share this decision interface.
 redesign_allocate <- function(state,candidates,method,model,first,selection_year) {
+ validate_ocs_settings(state$config)
  old <- state$parents
  predicted <- redesign_predict(candidates,method,model)
  score <- if(method=='Pheno') predicted@pheno else predicted@ebv
  accuracy <- suppressWarnings(cor(as.numeric(gv(predicted)),as.numeric(score)))
- if(!is.na(state$config$ocs_alpha)) {
+ if(isTRUE(state$config$ocs_enabled)) {
   solution <- redesign_ocs(state,candidates,model)
   updated <- list(parents=solution$parents,new=solution$new,ocs=solution)
  } else {

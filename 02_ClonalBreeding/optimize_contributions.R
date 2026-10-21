@@ -1,4 +1,5 @@
-# Historical adapter filename; the active implementation uses native optiSel functions.
+# Build current Ne-based OCS inputs from the almond candidate pool and validate allocation.
+# Contributions are optimized natively; no manual repair or alternative optimizer is used.
 source(file.path(getOption('almond.input_dir'),'ocs_optisel.R'),local=.GlobalEnv)
 redesign_ocs <- function(state,candidates,model) {
  pool<-redesign_predict(redesign_merge_latest(list(state$parents,candidates)),'GS',model)
@@ -27,16 +28,15 @@ redesign_ocs <- function(state,candidates,model) {
  active<-which(solution$metrics$counts>0)
  details<-list(implementation='optiSel_adultcap32_v12',plan=solution$plan,
    family_sizes=solution$family_sizes,offspring=N,max_individual_contribution=.10,
-   max_contributing_parents=NA_integer_,group_kinship=solution$metrics$kinship,
-   bound=solution$bound,minK=solution$minK,maxK=solution$maxK,
-   contributions=solution$metrics$contribution,fallback_to_diversity_endpoint=FALSE,
-   endpoints_collapsed=abs(solution$maxK-solution$minK)<1e-10,
+   group_kinship=solution$metrics$kinship,
+   bound=solution$bound,
+   contributions=solution$metrics$contribution,
    custom_contribution_refinement=FALSE,
    mother_ages=age[solution$plan[,1]],father_ages=age[solution$plan[,2]])
  details$target_Ne<-state$config$ocs_target_Ne;details$reference_kinship<-reference_kinship;details$generation_interval_proxy<-generation_interval
  details$optimization_audit<-solution$audit;state$speed_ocs_solver<-details
  list(parents=pool[active],new=sum(!pool@id[active]%in%state$parents@id),
-   bound=solution$bound,minK=NA_real_,maxK=NA_real_,alpha=NA_real_,
+   bound=solution$bound,
    metrics=solution$metrics,weighted_age=sum(solution$metrics$contribution*age),
    contributions=data.frame(id=as.character(pool@id[active]),contribution=solution$metrics$contribution[active]),
    cross_ids=matrix(as.character(pool@id[solution$plan]),ncol=2),

@@ -68,16 +68,16 @@ redesign_worker <- function(job) {
      # A failed scenario must not contaminate the next scenario's state or RNG.
      source(file.path(job$root,'redesigned_schemes.R'),local=.GlobalEnv)
      source(file.path(job$root,'ocs_discrete.R'),local=.GlobalEnv)
-     source(file.path(job$root,'manual_ocs_adapter.R'),local=.GlobalEnv)
+     source(file.path(job$root,'optimize_contributions.R'),local=.GlobalEnv)
      source(file.path(job$root,'compatible_crosses.R'),local=.GlobalEnv)
      load(base_file,envir=.GlobalEnv)
      state<-get('state',.GlobalEnv)
-     if(!identical(state$config$design_version,job$config$design_version) && !(state$config$design_version %in% c('PT_AT_ET_annual_matched_PT_v4','PT_AT_ET_decision_specific_PT_v5','PT_AT_ET_optiSel_profiles_v7','PT_AT_ET_optiSel_cap10_v8','PT_AT_ET_optiSel_native_offspring_v9') && job$config$design_version%in%c('PT_AT_ET_optiSel_single_genotype_Ne_v10','PT_AT_ET_optiSel_SI_groups_v11','PT_AT_ET_optiSel_adultcap32_v12'))) stop('Historical burn-in cannot be reused with the revised calendar.')
+     if(!identical(state$config$design_version,job$config$design_version)) stop('Burn-in source design differs from the current implementation.')
      if(is.null(state$stage_history)) stop('Burn-in lacks stage-specific training archives.')
      SP$nThreads<-job$config$threads
      assign('.Random.seed',parallel::nextRNGStream(job$seed),envir=.GlobalEnv)
      method<-selected$method[index];years<-selected$first_parental_use[index]
-     state$config$ocs_alpha<-selected$ocs_alpha[index]
+     state$config$ocs_enabled<-selected$ocs_enabled[index]
      state$config$ocs_target_Ne<-selected$ocs_target_Ne[index]
      state$config$early_selection<-selected$early_selection[index]
      state$config$progeny<-selected$progeny_per_cross[index]
@@ -91,9 +91,6 @@ redesign_worker <- function(job) {
      state$config$first_parental_use<-years
      state$config$ocs_backend<-'optiSel_adultcap32_v12'
      state$config$ocs_max_contribution<-job$config$ocs_max_contribution
-     state$config$ocs_family_sizes<-job$config$ocs_family_sizes
-     state$config$ocs_max_parents<-NA_integer_
-     if(!identical(state$config$design_version,job$config$design_version) && !(state$config$design_version %in% c('PT_AT_ET_annual_matched_PT_v4','PT_AT_ET_decision_specific_PT_v5','PT_AT_ET_optiSel_profiles_v7','PT_AT_ET_optiSel_cap10_v8','PT_AT_ET_optiSel_native_offspring_v9') && job$config$design_version%in%c('PT_AT_ET_optiSel_single_genotype_Ne_v10','PT_AT_ET_optiSel_SI_groups_v11','PT_AT_ET_optiSel_adultcap32_v12'))) stop('Burn-in design version differs. Generate a new burn-in for matched-cohort training.')
      state$config$training_stage<-job$config$training_stage
      state$config$training_cohort_stage<-job$config$training_cohort_stage
      state$config$gs_solver<-job$config$gs_solver
@@ -118,7 +115,7 @@ redesign_worker <- function(job) {
        completed_year<<-state$year
        partial<-redesign_bind(records)
        saveRDS(partial,file.path(job$directory,paste0('results_partial_',scenario,'.rds')))
-       if(!is.na(state$config$ocs_alpha)||state$config$speed_breeding) {
+       if(isTRUE(state$config$ocs_enabled)||state$config$speed_breeding) {
          saveRDS(list(solver=state$speed_ocs_solver,crosses=state$speed_cross_trace),
            file.path(job$directory,sprintf('allocation_%s_year_%03d.rds',scenario,state$year)))
        }

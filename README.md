@@ -37,8 +37,9 @@ and explain its task, from launching a scheme through the annual selection and
 crossing cycle to recording results. The central annual coordinator is
 [`R/advance_year.R`](02_ClonalBreeding/R/advance_year.R); the surrounding modules
 separate phenotyping, training, prediction, selection, parent allocation and
-execution. Existing `main.R` and scheme-specific `00RUNME.R` launchers remain
-supported through the compatibility loader `redesigned_schemes.R`.
+execution. Use `run_scheme.R` for one scheme and `run_experiment.R` for a set
+of schemes. Scheme-specific `00RUNME.R` launchers use the same engine loader,
+`redesigned_schemes.R`.
 
 ```mermaid
 flowchart TD
@@ -93,6 +94,7 @@ when adult speed-breeding candidates share both roles, a directed integer
 the native total counts. Contributions are not repaired or refined after optimization.
 
 Diversity, Balanced and Gain use **Ne-based control parameters 30, 10 and 5**.
+`ocs_enabled` activates OCS and `ocs_target_Ne` specifies the profile's target.
 The annual coancestry bound uses standing-parent mean genomic coancestry and
 mean age as a generation-interval proxy. These control parameters are not
 estimates or guarantees of realized effective population size.
@@ -168,7 +170,8 @@ source(file.path(root, "plot_results.R"))
 plot_experiment(run$run_dir)
 ```
 
-Explicitly running [main.R](02_ClonalBreeding/main.R) launches the full default catalogue, while each numbered scenario folder contains an individual `00RUNME.R` entry point.
+Use `run_experiment.R --schemes=all` to launch the full catalogue. Each numbered
+scenario folder also contains an individual `00RUNME.R` entry point.
 
 Phenotypic and genomic schemes run in parallel. Pedigree schemes are processed afterwards in a sequential ASReml worker. Worker and thread counts should be adjusted to available resources and licence constraints.
 
@@ -200,13 +203,19 @@ almondsim/
 ├── LICENSE
 ├── docs/figures/                 # Breeding-program diagrams
 └── 02_ClonalBreeding/
-    ├── main.R                   # Full-catalogue entry point
+    ├── run_scheme.R             # Select one scheme
+    ├── run_experiment.R         # Select a set or all schemes
     ├── 00_Burn_in/              # Founder and trait settings
     ├── 01_Pheno_Y9/ ...         # Numbered scenario settings and launchers
-    ├── redesigned_schemes.R     # Annual engine and prediction models
+    ├── redesigned_schemes.R     # Load the R/ modules
+    ├── R/                      # Annual cycle, models, selection and execution
     ├── ocs_*.R                 # Contribution and mating allocation backend
     ├── plot_results.R          # Plotting utilities
     ├── tests/                  # Focused implementation checks
+    ├── analysis/               # Optional pedigree export
+    ├── PIPELINE.md             # Script connection diagrams
+    ├── REVIEW_GUIDE.md         # Where to review each decision
+    ├── MANUAL_OCS.md           # Current OCS workflow and settings
     ├── SCHEMES.md              # Scenario definitions and model assumptions
     └── STORAGE.md              # Inputs, external storage and execution
 ```

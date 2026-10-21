@@ -1,67 +1,68 @@
-# Single-genotype optimal contributions (v10)
+# Optimal contribution selection
 
-## Selection and constraints
+## Active settings
 
-The continuous optimizer has one variable per genotype, not separate maternal
-and paternal copies. One `optiSel::opticont("max.BV", ..., solver="default")`
-call maximizes predicted genetic merit. The combined individual cap is 10%.
-Candidates that can supply pollen only have a joint upper bound of 50%; an
-analogous bound applies to any mother-only group. These aggregate bounds are
-necessary but do not guarantee compatible integer matings.
+OCS is activated explicitly with `ocs_enabled <- TRUE`. The profile is defined
+by `ocs_target_Ne`: **30 for Diversity, 10 for Balanced and 5 for Gain**.
+Non-OCS schemes use `ocs_enabled <- FALSE` and `ocs_target_Ne <- NA_real_`.
 
-Diversity, Balanced and Gain use control parameters Ne = 50, 20 and 5,
-respectively. The annual genomic coancestry bound is
+These are target-Ne control parameters, not estimates or guarantees of realized
+effective population size. Each decision uses the annual coancestry bound
 
     B = 1 - (1 - K_reference) * (1 - 1/(2*Ne))^(1/L).
 
-K_reference is the mean genomic coancestry of the standing parental pool,
-with equal genotype weights. L is the mean age of that pool at the coming
-crossing decision, used as an explicit generation-interval proxy. These are
-Ne-based control parameters, not estimates or guarantees of realized effective
-population size. The matrix is founder-centred genomic coancestry; the target
-must be interpreted on that reference scale. Audit files preserve both inputs.
-There are no minimum-coancestry/maximum-merit endpoint fits. Legacy `ocs_alpha`
-fields remain internal scheme dispatch markers only; alpha no longer defines
-the bound. Annual outputs record ocsAlpha=NA and ocsTargetNe explicitly.
+`K_reference` is standing-parent mean genomic coancestry under equal genotype
+weights. `L` is their mean age at the coming crossing decision, used as a
+generation-interval proxy. Founder SNP reference frequencies remain fixed.
 
-## Native rounding and biological allocation
+## Contributions and biological constraints
 
-`optiSel::noffspring(random=FALSE)` supplies integer counts without custom
-repair or local contribution refinement:
+`optimize_contributions.R` constructs the candidate pool, breeding values, ages,
+S-genotype groups and compatibility matrix. `ocs_optisel.R` optimizes one
+contribution variable per genotype using a single native
+`optiSel::opticont("max.BV", ..., solver="default")` call.
 
-* When all candidates are eligible in both roles (GS6), equal continuous
-  maternal/paternal shares are rounded natively; `optiSel::matings` allocates
-  fixed role counts with a forbidden-edge lpSolve adapter.
-* When pollen-only candidates saturate half of the contribution (within 1e-7),
-  they form the paternal group and the remaining genotypes the maternal group.
-  Native group rounding preserves 1500 counts in each role before matings.
-* Otherwise native noffspring allocates 3000 total parental participations.
-  A single bookkeeping group uses oc=c/2 and N=3000; no biological sex is
-  assigned by that bookkeeping label. A directed integer lpSolve model jointly
-  assigns roles and pairs. Each genotype's total participation count is fixed,
-  each forbidden biological edge is excluded, and 1500 offspring are required.
-  The objective minimizes offspring-weighted parental-pair coancestry.
-  This general-case allocator is custom glue and is NOT optiSel::matings.
+- GS6: combined maternal/paternal contribution <=10% per genotype.
+- Speed breeding: contribution <=3.2% per adult (age >=4) and <=10% per younger
+  candidate; pollen-only contributions jointly <=50%. At least 16 adults must
+  therefore contribute, and the allocated offspring are checked accordingly.
+- Mutually incompatible S-genotype groups: joint contribution <=50%.
+  Sharing one S allele permits crossing through compatible pollen.
+- Mothers: age >=4. Pollen donors: age >=2 in speed breeding, >=4 otherwise.
+- No selfing and exactly 1,500 offspring, followed by early selection of 500.
 
-All allocations enforce maternal age >=4, paternal age >=2 in speed breeding
-(otherwise >=4), gametophytic compatibility, no selfing, the offspring budget
-and the combined 10% cap. Families can differ in size; parent/pair count is free.
-No native integer counts are changed to force feasibility. Infeasible counts,
-cap violations or unsuccessful solvers fail that scenario/replicate without
-retry. Pair allocation has a 30-second limit and requires lpSolve status 0.
+Parent and pair counts are free. There is no fixed replacement rate or maximum
+parent count for OCS. Family sizes may differ.
 
-Coancestry is checked against the original matrix. The user-authorized policy
-of18October accepts continuous and rounded relative excesses up to10% (with
-1e-7 absolute numerical tolerance), recording warnings and absolute/relative
-audits. Larger departures fail explicitly. Native solver validity remains required. Rounded excess does not relax age, compatibility or
-cap checks. No claim of a globally optimal discrete OCS solution is made.
+## Integer counts and matings
 
-## Provenance
+Native `optiSel::noffspring(random=FALSE)` supplies offspring counts.
 
-Design: `PT_AT_ET_optiSel_single_genotype_Ne_v10`. Old v7/v8/v9 future results
-retain their original code and are excluded from v10 OCS comparisons. Saved
-matched burn-ins, seeds and environments can be reused without relabelling
-historical future trajectories. Non-OCS/Pedigree models and crossing rules are
-unchanged. The paper includes GS6 and speed-GS2 OCS only, not exploratory GS4.
-Audits include optimizer size, solver, continuous and realized contributions,
-allocation mode, bounds, Ne target, reference coancestry, L proxy and timings.
+1. With equal-role eligibility (GS6), maternal/paternal shares are rounded
+   natively and `optiSel::matings` assigns compatible pairs.
+2. If pollen-only candidates supply half of the total contribution, they form
+   the paternal group and the remaining genotypes the maternal group. Native
+   rounding supplies the fixed role counts before mating allocation.
+3. Otherwise, native rounding supplies 3,000 total parental participations.
+   A directed `lpSolve` formulation assigns adult roles and compatible pairs
+   while preserving each genotype's exact count and the 1,500-offspring budget.
+
+The mating adapters exclude forbidden edges and minimize offspring-weighted
+pair coancestry. They require solver status 0 with a 30-second limit. Native
+counts are not repaired, refined or changed to force feasibility.
+
+## Validation and outputs
+
+Continuous and allocated coancestry are checked against the original K matrix.
+Relative excess up to 10% of the absolute bound plus 1e-7 is permitted and
+audited; larger departures fail explicitly. This does not relax contribution
+caps, ages, compatibility, no selfing, native solver validity or offspring totals.
+
+Annual outputs record `ocsEnabled`, `ocsTargetNe`, the bound, coancestry, expected
+merit and allocation departures. Allocation audits retain native fits, counts,
+contributions, parental ages, SI-group limits, solver status and inclusive times.
+Failed attempts remain recorded without automatic retry.
+
+The executable source design is `PT_AT_ET_optiSel_adultcap32_v12`; new runs require
+a matching burn-in. Existing frozen experiments and their outputs retain their
+own source versions and are not modified when the repository is updated.

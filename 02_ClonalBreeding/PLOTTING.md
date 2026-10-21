@@ -57,9 +57,10 @@ exported alongside the images. Gain is relative to each replicate's burn-in.
 Seedling gain and variance are post-early-selection; prediction accuracy is
 pre-early-selection. No zero accuracy is invented for phenotypic selection.
 
-The run's recorded design identifier is respected. Historical OCS results carry
-an explicit historical-design note and are never relabelled as native-offspring
-OCS. Data from different runs or design versions are not combined.
+The run's recorded design identifier is respected. OCS results must match the
+current source design and the design identifiers in their annual records.
+To reproduce an older experiment, use its frozen plotting code. Data from
+different runs or design versions are not combined by this module.
 Existing frozen simulation code is not modified by changing this plot module.
 
 ## Publication styling
@@ -67,7 +68,7 @@ Existing frozen simulation code is not modified by changing this plot module.
 Figures have no overall title, subtitle or explanatory footnote. Metric labels
 are Genetic gain, Genetic variance and Selection accuracy. Axis labels, scheme
 legends and Methods-block labels remain. Sample sizes are exported in CSV files, not printed inside figures. Caption information,
-provisional coverage and historical-design provenance are stored externally in
+provisional coverage and source-design provenance are stored externally in
 the exported README and CSV files rather than printed on the image.
 
 ## Legend columns
