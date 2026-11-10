@@ -47,7 +47,7 @@ flowchart TD
     Predict --> Early["Replace seedlings with the early-selected population<br/>R/advance_year.R: step 3; R/apply_selection.R ranks candidates"]
     Early --> Young["Select parents before their own phenotypes: years 2/4<br/>R/select_parents.R"]
     Young --> Cross["Generate offspring from the current parent allocation<br/>compatible_crosses.R"]
-    Cross --> Pheno["Update aggregate phenotypes<br/>R/simulate_phenotypes.R"]
+    Cross --> Pheno["Generate completed-trial phenotypes<br/>R/simulate_phenotypes.R"]
     Pheno --> Archive["Archive evaluated cohorts before trial cuts<br/>R/build_training_population.R"]
     Archive --> Fit["Fit PT and AT decision models<br/>R/fit_prediction_model.R"]
     Fit --> Adult["Select parents for NEXT year: years 6/9<br/>R/select_parents.R"]
@@ -115,7 +115,7 @@ described in [MANUAL_OCS.md](MANUAL_OCS.md).
 | `plot_manuscript.R` | Produce manuscript plots/statistics | Completed run -> figures and analysis files |
 | `analysis/export_pedigree.R` | Optional pedigree export | Saved pedigree -> CSV |
 
-Most functions retain their `redesign_*` names so existing launchers still work.
+For the trial timing, annual environment and variance calibration, see [stage phenotyping](STAGE_PHENOTYPING.md).
 The four `*_PT_original` functions are now explicit definitions of the PT-only
 model path. They are not aliases created before a later override. The repeated
 PT/AT path calls them when needed; it does not fit a different biological design.

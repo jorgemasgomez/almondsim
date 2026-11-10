@@ -1,10 +1,6 @@
 # Stage phenotyping
 
-This phenotype model was incorporated into main at the user's request on
-21 October 2026. The single-replicate pilot was still running at integration:
-16 of 18 schemes had completed without recorded failures. This is a scientific
-model change, not a behavior-preserving rename. Historical manuscript results
-continue to describe their original frozen source versions.
+The current model generates a separate phenotypic record for each completed trial. Historical simulation results retain the phenotyping model recorded for their run.
 
 ## Separate PT, AT and elite trials
 

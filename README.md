@@ -10,7 +10,7 @@ The clonal breeding framework was adapted from [Bančič et al. (2025)](https://
 
 ![Baseline almond breeding program: crossing, juvenility, preliminary trials, advanced trials, elite trials and annual parental replacement.](docs/figures/almond_baseline_corrected.png)
 
-*Figure 1. Baseline breeding program. Each annual cycle produces 500 offspring from 20 crosses. Preliminary trials (PT), advanced trials (AT) and elite trials (ET) occur in years 4–5, 6–8 and 9–11, respectively. Selection reduces each cohort from 500 to 25 and then to eight individuals. In the baseline scheme, the annual pool contains eight new and 24 retained parents. The displayed heritabilities are targets for aggregate stage evaluations in the reference population.*
+*Figure 1. Baseline breeding program. Each annual cycle produces 500 offspring from 20 crosses. Preliminary trials (PT), advanced trials (AT) and elite trials (ET) occur in years 4–5, 6–8 and 9–11, respectively. Selection reduces each cohort from 500 to 25 and then to eight individuals. In the baseline scheme, the annual pool contains eight new and 24 retained parents. The displayed heritabilities are targets for completed-trial phenotypes in the reference population.*
 
 The default experiment comprises 14 initialization cycles, a 40-year burn-in and 40 future years. Scenarios within a replicate share a burn-in population and an annual environmental calendar, supporting paired comparisons. Genetic gain is measured relative to each replicate's own burn-in population.
 
@@ -52,7 +52,7 @@ flowchart TD
     Launch["run_scheme.R / run_experiment.R<br/>Choose schemes and replication settings"] --> Load["redesigned_schemes.R<br/>Load the named R/ modules"]
     Load --> Jobs["R/run_experiment.R + R/run_replicate.R<br/>Freeze code, initialize and coordinate replicates"]
     Jobs --> Year["R/advance_year.R<br/>Coordinate each breeding year"]
-    Year --> Evaluate["R/simulate_phenotypes.R<br/>Update aggregate evaluations"]
+    Year --> Evaluate["R/simulate_phenotypes.R<br/>Generate completed-trial phenotypes"]
     Evaluate --> Model["R/build_training_population.R + R/fit_prediction_model.R<br/>Construct training data and fit decision models"]
     Model --> Select["R/apply_selection.R + R/select_parents.R<br/>Select trial individuals and future parents"]
     Select --> Record["R/record_results.R<br/>Save annual population summaries"]
@@ -80,7 +80,7 @@ These commands create new experiments; they do not resume existing runs.
 
 ### Prediction models
 
-- **Phenotypic selection** ranks candidates using their available aggregate phenotypes.
+- **Phenotypic selection** ranks candidates using their latest available phenotype from a completed trial.
 - **Pedigree prediction** uses additive BLUP in ASReml-R, with pedigree relationships and record year as a fixed effect.
 - **Genomic prediction** uses SNP-based ridge-regression BLUP in AlphaSimR, accounting for record year.
 

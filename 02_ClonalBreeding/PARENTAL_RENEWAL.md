@@ -57,6 +57,4 @@ the highest-ranking trial selections by breeding value alone.
 | Select the best individuals with AlphaSimR | `R/apply_selection.R` |
 | Optimize OCS contributions and parental roles | `optimize_contributions.R` and `ocs_optisel.R` |
 
-Renaming these functions does not change selection, populations, scores or RNG
-use. A separate experimental branch changes phenotyping; that is a scientific
-model change rather than part of this naming refactor.
+See [stage phenotyping](STAGE_PHENOTYPING.md) for how completed-trial records are generated and used in parental selection.
